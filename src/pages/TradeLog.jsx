@@ -143,7 +143,7 @@ export default function TradeLog() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-surface-700 bg-surface-800/50">
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                   {[
                     { key: 'date', label: 'Date' },
                     { key: 'pnl', label: 'PnL', right: true },
@@ -167,7 +167,7 @@ export default function TradeLog() {
               </thead>
               <tbody>
                 {filtered.map(trade => (
-                  <tr key={trade.id} className="border-b border-surface-800 hover:bg-surface-800/40 transition-colors group">
+                  <tr key={trade.id} className="transition-colors group" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                     <td className="px-4 py-3 text-gray-300 font-mono text-xs whitespace-nowrap">
                       {formatDate(trade.date)}
                     </td>
@@ -179,22 +179,22 @@ export default function TradeLog() {
                     <td className="px-4 py-3">
                       {trade.instrument
                         ? <span className="badge badge-blue">{trade.instrument}</span>
-                        : <span className="text-gray-700">—</span>}
+                        : <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>}
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell">
                       {trade.session
                         ? <span className="badge badge-gray">{trade.session}</span>
-                        : <span className="text-gray-700">—</span>}
+                        : <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>}
                     </td>
                     <td className="px-4 py-3 text-right hidden md:table-cell font-mono text-xs">
                       {trade.r_value != null
                         ? <span className={pnlClass(trade.r_value)}>{(Number(trade.r_value) >= 0 ? '+' : '')}{Number(trade.r_value).toFixed(2)}R</span>
-                        : <span className="text-gray-700">—</span>}
+                        : <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>}
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell max-w-[200px]">
                       {trade.notes
                         ? <span className="text-gray-400 text-xs truncate block">{trade.notes}</span>
-                        : <span className="text-gray-700">—</span>}
+                        : <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>}
                     </td>
                     <td className="px-4 py-3 w-10">
                       <button
@@ -216,7 +216,7 @@ export default function TradeLog() {
       {/* Delete confirmation */}
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-surface-900 border border-surface-700 rounded-xl p-6 max-w-sm w-full animate-slide-in">
+          <div className="card p-6 max-w-sm w-full animate-slide-in">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center">
                 <AlertTriangle className="w-5 h-5 text-red-400" />

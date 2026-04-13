@@ -13,32 +13,33 @@ import {
 import { supabase } from '../lib/supabase'
 
 const DAY_HEADERS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
-const WEEKEND_COLS = new Set([0, 6]) // Su=0, Sa=6
+const WEEKEND_COLS = new Set([0, 6])
 
-// Returns Tailwind bg class based on PnL magnitude
-function cellBg(pnl, maxAbs) {
-  if (pnl === undefined || pnl === null) return ''
-  if (pnl === 0) return 'bg-surface-700/30'
-  if (maxAbs === 0) return pnl > 0 ? 'bg-emerald-900/50' : 'bg-red-900/50'
+// Returns inline background color string for a calendar cell
+function cellBgColor(pnl, maxAbs) {
+  if (pnl === undefined || pnl === null) return null
+  if (pnl === 0) return 'rgba(255,255,255,0.03)'
+  if (maxAbs === 0) return pnl > 0 ? 'rgba(0,211,149,0.15)' : 'rgba(255,71,87,0.12)'
   const ratio = Math.min(1, Math.abs(pnl) / maxAbs)
   if (pnl > 0) {
-    if (ratio > 0.75) return 'bg-emerald-500/40'
-    if (ratio > 0.5)  return 'bg-emerald-500/28'
-    if (ratio > 0.25) return 'bg-emerald-500/16'
-    return 'bg-emerald-500/8'
+    const alpha = 0.05 + ratio * 0.22
+    return `rgba(0,211,149,${alpha.toFixed(2)})`
   } else {
-    if (ratio > 0.75) return 'bg-red-500/40'
-    if (ratio > 0.5)  return 'bg-red-500/28'
-    if (ratio > 0.25) return 'bg-red-500/16'
-    return 'bg-red-500/8'
+    const alpha = 0.05 + ratio * 0.17
+    return `rgba(255,71,87,${alpha.toFixed(2)})`
   }
 }
 
-function pnlText(pnl) {
-  if (pnl === undefined || pnl === null) return 'text-gray-600'
-  if (pnl > 0) return 'text-emerald-300'
-  if (pnl < 0) return 'text-red-300'
-  return 'text-gray-500'
+function cellBorderColor(pnl) {
+  if (pnl === undefined || pnl === null || pnl === 0) return null
+  return pnl > 0 ? 'rgba(0,211,149,0.3)' : 'rgba(255,71,87,0.25)'
+}
+
+function pnlTextClass(pnl) {
+  if (pnl === undefined || pnl === null) return 'pnl-zero'
+  if (pnl > 0) return 'pnl-pos'
+  if (pnl < 0) return 'pnl-neg'
+  return 'pnl-zero'
 }
 
 export default function Calendar() {
@@ -49,9 +50,8 @@ export default function Calendar() {
   const [viewDate, setViewDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(null)
   const [addTradeDate, setAddTradeDate] = useState(null)
-  const [journals, setJournals] = useState({}) // dateStr -> journal
+  const [journals, setJournals] = useState({})
 
-  // Fetch journals for this account
   useEffect(() => {
     if (!selectedAccount) return
     supabase
@@ -71,12 +71,9 @@ export default function Calendar() {
   function nextMonth() { setViewDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1)) }
   function goToday()   { setViewDate(new Date()); setSelectedDate(null) }
 
-  // Build daily maps
   const dailyPnL = useMemo(() => {
     const map = {}
-    trades.forEach(t => {
-      map[t.date] = (map[t.date] || 0) + Number(t.pnl)
-    })
+    trades.forEach(t => { map[t.date] = (map[t.date] || 0) + Number(t.pnl) })
     return map
   }, [trades])
 
@@ -86,38 +83,26 @@ export default function Calendar() {
     return map
   }, [trades])
 
-  // Month boundaries
   const monthStart = startOfMonth(viewDate)
   const monthEnd   = endOfMonth(viewDate)
+  const calStart   = startOfWeek(monthStart, { weekStartsOn: 0 })
+  const calEnd     = endOfWeek(monthEnd, { weekStartsOn: 0 })
+  const calDays    = eachDayOfInterval({ start: calStart, end: calEnd })
 
-  // Calendar grid: Sun-start weeks covering the whole month
-  const calStart = startOfWeek(monthStart, { weekStartsOn: 0 })
-  const calEnd   = endOfWeek(monthEnd,   { weekStartsOn: 0 })
-  const calDays  = eachDayOfInterval({ start: calStart, end: calEnd })
-
-  // Group into weeks
   const weeks = []
-  for (let i = 0; i < calDays.length; i += 7) {
-    weeks.push(calDays.slice(i, i + 7))
-  }
+  for (let i = 0; i < calDays.length; i += 7) weeks.push(calDays.slice(i, i + 7))
 
-  // Month stats (in-month days only)
-  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd })
-  const monthPnLs = monthDays.map(d => dailyPnL[format(d, 'yyyy-MM-dd')]).filter(v => v !== undefined)
-  const monthTotal    = monthPnLs.reduce((s, v) => s + v, 0)
-  const tradingDays   = monthPnLs.length
-  const profitDays    = monthPnLs.filter(v => v > 0).length
-  const lossDays      = monthPnLs.filter(v => v < 0).length
+  const monthDays  = eachDayOfInterval({ start: monthStart, end: monthEnd })
+  const monthPnLs  = monthDays.map(d => dailyPnL[format(d, 'yyyy-MM-dd')]).filter(v => v !== undefined)
+  const monthTotal = monthPnLs.reduce((s, v) => s + v, 0)
+  const tradingDays = monthPnLs.length
+  const profitDays  = monthPnLs.filter(v => v > 0).length
+  const lossDays    = monthPnLs.filter(v => v < 0).length
+  const maxAbs      = monthPnLs.length > 0 ? Math.max(...monthPnLs.map(Math.abs)) : 1
 
-  // Color intensity scale: use current month's max abs
-  const maxAbs = monthPnLs.length > 0 ? Math.max(...monthPnLs.map(Math.abs)) : 1
-
-  // Drill-down data
   const selectedTrades  = selectedDate ? trades.filter(t => t.date === selectedDate) : []
   const selectedJournal = selectedDate ? journals[selectedDate] : null
   const selectedPnL     = selectedDate != null ? dailyPnL[selectedDate] : undefined
-
-  // Which week index contains the selected date
   const selectedWeekIdx = selectedDate
     ? weeks.findIndex(w => w.some(d => format(d, 'yyyy-MM-dd') === selectedDate))
     : -1
@@ -133,118 +118,132 @@ export default function Calendar() {
             <h1 className="text-xl font-bold text-white w-44">{format(viewDate, 'MMMM yyyy')}</h1>
             <button onClick={nextMonth} className="btn-ghost p-2"><ChevronRight className="w-4 h-4" /></button>
           </div>
-          {/* Month summary inline */}
           <div className="flex items-center gap-4 mt-1.5 pl-10 text-sm">
             <span className={`font-mono font-semibold ${pnlClass(monthTotal)}`}>
               {monthTotal >= 0 ? '+' : ''}{fmt(monthTotal, 0)}
             </span>
-            <span className="text-gray-500">{tradingDays} day{tradingDays !== 1 ? 's' : ''} traded</span>
-            <span className="text-emerald-500 text-xs">{profitDays}W</span>
-            <span className="text-red-500 text-xs">{lossDays}L</span>
+            <span style={{ color: 'rgba(255,255,255,0.35)' }}>{tradingDays} day{tradingDays !== 1 ? 's' : ''} traded</span>
+            <span style={{ color: '#00d395', fontSize: 12 }}>{profitDays}W</span>
+            <span style={{ color: '#ff4757', fontSize: 12 }}>{lossDays}L</span>
           </div>
         </div>
-        <button onClick={goToday} className="btn-ghost text-xs px-3 py-1.5 mt-1 shrink-0">
-          Today
-        </button>
+        <button onClick={goToday} className="btn-ghost text-xs px-3 py-1.5 mt-1 shrink-0">Today</button>
       </div>
 
       {/* Calendar grid */}
       <div className="card overflow-hidden">
 
         {/* Column headers */}
-        <div className="grid grid-cols-8 border-b border-surface-700">
+        <div className="grid grid-cols-8" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           {DAY_HEADERS.map((d, i) => (
-            <div
-              key={d}
-              className={`py-2.5 text-center text-xs font-semibold uppercase tracking-wider
-                ${WEEKEND_COLS.has(i) ? 'text-gray-600' : 'text-gray-400'}`}
-            >
+            <div key={d} className="py-2.5 text-center text-xs font-semibold uppercase tracking-wider"
+              style={{ color: WEEKEND_COLS.has(i) ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.4)' }}>
               {d}
             </div>
           ))}
-          <div className="py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-gray-500 border-l border-surface-700">
+          <div className="py-2.5 text-center text-xs font-semibold uppercase tracking-wider"
+            style={{ color: 'rgba(255,255,255,0.3)', borderLeft: '1px solid rgba(255,255,255,0.07)' }}>
             Week
           </div>
         </div>
 
         {/* Weeks */}
         {weeks.map((weekDays, wi) => {
-          // Weekly total: sum in-month days
           const weekPnLs = weekDays
             .filter(d => isSameMonth(d, viewDate))
             .map(d => dailyPnL[format(d, 'yyyy-MM-dd')])
             .filter(v => v !== undefined)
-          const weekTotal = weekPnLs.reduce((s, v) => s + v, 0)
+          const weekTotal   = weekPnLs.reduce((s, v) => s + v, 0)
           const weekHasTrades = weekPnLs.length > 0
-          const isLastWeek = wi === weeks.length - 1
+          const isLastWeek  = wi === weeks.length - 1
 
           return (
             <div key={wi}>
               {/* Day cells row */}
-              <div className={`grid grid-cols-8 ${!isLastWeek || selectedWeekIdx === wi ? 'border-b border-surface-700/60' : ''}`}>
+              <div
+                className="grid grid-cols-8"
+                style={{ borderBottom: (!isLastWeek || selectedWeekIdx === wi) ? '1px solid rgba(255,255,255,0.05)' : 'none' }}
+              >
                 {weekDays.map((day, di) => {
-                  const dateStr = format(day, 'yyyy-MM-dd')
-                  const inMonth = isSameMonth(day, viewDate)
-                  const today   = isToday(day)
-                  const isWeekend = WEEKEND_COLS.has(di)
-                  const pnl   = dailyPnL[dateStr]
-                  const count = dailyCount[dateStr]
+                  const dateStr    = format(day, 'yyyy-MM-dd')
+                  const inMonth    = isSameMonth(day, viewDate)
+                  const today      = isToday(day)
+                  const isWeekend  = WEEKEND_COLS.has(di)
+                  const pnl        = dailyPnL[dateStr]
+                  const count      = dailyCount[dateStr]
                   const isSelected = selectedDate === dateStr
                   const hasJournal = !!journals[dateStr]
                   const isLastCol  = di === 6
+
+                  // Build inline cell style
+                  const bgColor   = inMonth && pnl !== undefined ? cellBgColor(pnl, maxAbs) : null
+                  const bdColor   = inMonth && pnl !== undefined ? cellBorderColor(pnl) : null
+                  const cellStyle = {
+                    minHeight: 90,
+                    borderRight: isLastCol ? 'none' : '1px solid rgba(255,255,255,0.05)',
+                    background: !inMonth
+                      ? 'rgba(255,255,255,0.01)'
+                      : (bgColor || 'transparent'),
+                    transition: 'all 0.15s ease',
+                    position: 'relative',
+                    cursor: inMonth ? 'pointer' : 'default',
+                  }
+                  if (today && !isSelected) {
+                    cellStyle.border = '2px solid rgba(59,130,246,0.6)'
+                    cellStyle.boxShadow = '0 0 12px rgba(59,130,246,0.2)'
+                    cellStyle.borderRight = undefined
+                  }
+                  if (isSelected) {
+                    cellStyle.border = '2px solid rgba(0,211,149,0.5)'
+                    cellStyle.boxShadow = '0 0 12px rgba(0,211,149,0.15)'
+                    cellStyle.borderRight = undefined
+                  }
 
                   return (
                     <div
                       key={dateStr}
                       onClick={() => inMonth && setSelectedDate(isSelected ? null : dateStr)}
-                      className={`
-                        relative min-h-[90px] p-2 transition-colors
-                        border-r border-surface-700/40 cursor-pointer group
-                        ${isLastCol ? 'border-r-0' : ''}
-                        ${!inMonth
-                          ? 'bg-surface-950/60'
-                          : pnl !== undefined
-                            ? cellBg(pnl, maxAbs)
-                            : 'hover:bg-surface-800/50'
-                        }
-                        ${isSelected ? 'ring-2 ring-inset ring-brand/70' : ''}
-                        ${today ? 'ring-1 ring-inset ring-blue-400/50' : ''}
-                      `}
+                      className="p-2 group"
+                      style={cellStyle}
                     >
-                      {/* Weekend overlay */}
+                      {/* Weekend dim overlay */}
                       {isWeekend && inMonth && (
-                        <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.12)', pointerEvents: 'none' }} />
                       )}
 
                       {inMonth && (
                         <>
                           {/* Day number + icons */}
-                          <div className="flex items-center justify-between mb-1 relative z-10">
-                            <span className={`text-xs font-medium leading-none
-                              ${today ? 'text-blue-400 font-bold' : 'text-gray-500'}`}>
+                          <div className="flex items-center justify-between mb-1" style={{ position: 'relative', zIndex: 1 }}>
+                            <span style={{
+                              fontSize: 12,
+                              fontWeight: today ? 700 : 500,
+                              color: today ? '#3b82f6' : 'rgba(255,255,255,0.4)',
+                              lineHeight: 1,
+                            }}>
                               {format(day, 'd')}
                             </span>
                             <div className="flex items-center gap-0.5">
-                              {hasJournal && <BookText className="w-2.5 h-2.5 text-blue-400/70" />}
+                              {hasJournal && <BookText style={{ width: 10, height: 10, color: 'rgba(96,165,250,0.7)' }} />}
                               {pnl === undefined && (
                                 <button
                                   onClick={e => { e.stopPropagation(); setAddTradeDate(dateStr) }}
-                                  className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-white/10 rounded transition-all"
+                                  className="opacity-0 group-hover:opacity-100 p-0.5 rounded transition-all"
+                                  style={{ background: 'rgba(255,255,255,0.08)' }}
                                 >
-                                  <Plus className="w-2.5 h-2.5 text-gray-500" />
+                                  <Plus style={{ width: 10, height: 10, color: 'rgba(255,255,255,0.5)' }} />
                                 </button>
                               )}
                             </div>
                           </div>
 
-                          {/* PnL + trade count — centered in remaining space */}
+                          {/* PnL + trade count */}
                           {pnl !== undefined ? (
-                            <div className="flex flex-col items-center justify-center relative z-10"
-                                 style={{ minHeight: 56 }}>
-                              <span className={`text-base font-bold font-mono leading-tight ${pnlText(pnl)}`}>
+                            <div className="flex flex-col items-center justify-center" style={{ minHeight: 56, position: 'relative', zIndex: 1 }}>
+                              <span className={`font-bold font-mono leading-tight ${pnlTextClass(pnl)}`} style={{ fontSize: 17 }}>
                                 {pnl >= 0 ? '+' : ''}{fmt(pnl, 0)}
                               </span>
-                              <span className="text-xs text-gray-500 mt-0.5">
+                              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
                                 {count} trade{count !== 1 ? 's' : ''}
                               </span>
                             </div>
@@ -258,20 +257,26 @@ export default function Calendar() {
                 })}
 
                 {/* Weekly total cell */}
-                <div className={`min-h-[90px] p-2 border-l border-surface-700/60 flex flex-col items-center justify-center gap-1
-                  ${weekHasTrades ? cellBg(weekTotal, maxAbs) : 'bg-surface-950/40'}`}>
-                  <span className="text-xs text-gray-600 font-medium">Wk {wi + 1}</span>
+                <div
+                  className="flex flex-col items-center justify-center gap-1 p-2"
+                  style={{
+                    minHeight: 90,
+                    borderLeft: '1px solid rgba(255,255,255,0.07)',
+                    background: weekHasTrades ? (cellBgColor(weekTotal, maxAbs) || 'transparent') : 'rgba(255,255,255,0.01)',
+                  }}
+                >
+                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontWeight: 500 }}>Wk {wi + 1}</span>
                   {weekHasTrades && (
-                    <span className={`text-sm font-bold font-mono leading-tight ${pnlText(weekTotal)}`}>
+                    <span className={`font-bold font-mono leading-tight ${pnlTextClass(weekTotal)}`} style={{ fontSize: 13 }}>
                       {weekTotal >= 0 ? '+' : ''}{fmt(weekTotal, 0)}
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* Drill-down panel — shown below the week that contains the selected date */}
+              {/* Drill-down panel */}
               {selectedWeekIdx === wi && selectedDate && (
-                <div className="border-b border-surface-700 bg-surface-900/80 animate-slide-in">
+                <div className="animate-slide-in" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(8,10,15,0.6)' }}>
                   <DrillDown
                     dateStr={selectedDate}
                     trades={selectedTrades}
@@ -289,28 +294,28 @@ export default function Calendar() {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-5 justify-center flex-wrap text-xs text-gray-500">
+      <div className="flex items-center gap-5 justify-center flex-wrap text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
         <div className="flex items-center gap-1.5">
           <div className="flex gap-0.5">
-            {[0.08, 0.18, 0.30, 0.42].map((o, i) => (
-              <div key={i} className="w-4 h-3 rounded-sm" style={{ background: `rgba(52,211,153,${o})` }} />
+            {[0.06, 0.12, 0.18, 0.27].map((o, i) => (
+              <div key={i} className="w-4 h-3 rounded-sm" style={{ background: `rgba(0,211,149,${o})` }} />
             ))}
           </div>
           Profit
         </div>
         <div className="flex items-center gap-1.5">
           <div className="flex gap-0.5">
-            {[0.08, 0.18, 0.30, 0.42].map((o, i) => (
-              <div key={i} className="w-4 h-3 rounded-sm" style={{ background: `rgba(248,113,113,${o})` }} />
+            {[0.06, 0.10, 0.16, 0.22].map((o, i) => (
+              <div key={i} className="w-4 h-3 rounded-sm" style={{ background: `rgba(255,71,87,${o})` }} />
             ))}
           </div>
           Loss
         </div>
         <div className="flex items-center gap-1.5">
-          <BookText className="w-3.5 h-3.5 text-blue-400/70" />Journal
+          <BookText style={{ width: 13, height: 13, color: 'rgba(96,165,250,0.7)' }} /> Journal
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-4 h-3 rounded-sm ring-1 ring-blue-400/50 bg-transparent" />Today
+          <div className="w-4 h-3 rounded-sm" style={{ border: '2px solid rgba(59,130,246,0.6)' }} /> Today
         </div>
       </div>
 
@@ -327,12 +332,11 @@ function DrillDown({ dateStr, trades, journal, pnl, fmt, onClose, onAddTrade }) 
 
   return (
     <div className="p-4">
-      {/* Panel header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
           <h3 className="text-sm font-semibold text-white">{displayDate}</h3>
           {pnl !== undefined && (
-            <span className={`text-sm font-mono font-bold ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            <span className={`text-sm font-mono font-bold ${pnl >= 0 ? 'pnl-pos' : 'pnl-neg'}`}>
               {pnl >= 0 ? '+' : ''}{fmt(pnl)}
             </span>
           )}
@@ -346,40 +350,37 @@ function DrillDown({ dateStr, trades, journal, pnl, fmt, onClose, onAddTrade }) 
         {/* Trades column */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              Trades {trades.length > 0 ? `(${trades.length})` : ''}
-            </p>
-            <button
-              onClick={onAddTrade}
-              className="flex items-center gap-1 text-xs text-brand hover:text-brand-hover"
-            >
+            <p className="stat-label">Trades {trades.length > 0 ? `(${trades.length})` : ''}</p>
+            <button onClick={onAddTrade} className="flex items-center gap-1 text-xs" style={{ color: '#00d395' }}>
               <Plus className="w-3 h-3" />Add trade
             </button>
           </div>
           {trades.length === 0 ? (
-            <p className="text-xs text-gray-600 py-2">No trades logged for this day.</p>
+            <p className="text-xs py-2" style={{ color: 'rgba(255,255,255,0.3)' }}>No trades logged for this day.</p>
           ) : (
             <div className="space-y-1.5">
               {trades.map(t => (
-                <div key={t.id} className="flex items-center justify-between bg-surface-800 rounded-lg px-3 py-2">
+                <div key={t.id} className="flex items-center justify-between rounded-lg px-3 py-2"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
+                >
                   <div className="flex items-center gap-2">
                     {Number(t.pnl) >= 0
-                      ? <TrendingUp className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      : <TrendingDown className="w-3.5 h-3.5 text-red-400 shrink-0" />}
+                      ? <TrendingUp style={{ width: 14, height: 14, color: '#00d395', flexShrink: 0 }} />
+                      : <TrendingDown style={{ width: 14, height: 14, color: '#ff4757', flexShrink: 0 }} />}
                     <div className="flex items-center gap-1.5">
                       {t.instrument && <span className="badge badge-blue text-xs">{t.instrument}</span>}
                       {t.session    && <span className="badge badge-gray text-xs">{t.session}</span>}
-                      {!t.instrument && !t.session && <span className="text-xs text-gray-600">—</span>}
+                      {!t.instrument && !t.session && <span style={{ color: 'rgba(255,255,255,0.2)' }} className="text-xs">—</span>}
                     </div>
                   </div>
-                  <span className={`text-sm font-mono font-semibold ${Number(t.pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <span className={`text-sm font-mono font-semibold ${Number(t.pnl) >= 0 ? 'pnl-pos' : 'pnl-neg'}`}>
                     {Number(t.pnl) >= 0 ? '+' : ''}{fmt(Number(t.pnl))}
                   </span>
                 </div>
               ))}
               {trades.length > 1 && (
                 <div className="flex justify-end pt-1">
-                  <span className={`text-xs font-mono font-semibold ${totalPnL >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <span className={`text-xs font-mono font-semibold ${totalPnL >= 0 ? 'pnl-pos' : 'pnl-neg'}`}>
                     Total: {totalPnL >= 0 ? '+' : ''}{fmt(totalPnL)}
                   </span>
                 </div>
@@ -391,10 +392,10 @@ function DrillDown({ dateStr, trades, journal, pnl, fmt, onClose, onAddTrade }) 
         {/* Journal column */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-              <BookText className="w-3.5 h-3.5 text-blue-400" />Journal
+            <p className="stat-label flex items-center gap-1.5">
+              <BookText style={{ width: 13, height: 13, color: '#60a5fa' }} />Journal
             </p>
-            <a href={`/journal?date=${dateStr}`} className="text-xs text-blue-400 hover:text-blue-300">
+            <a href={`/journal?date=${dateStr}`} className="text-xs" style={{ color: '#60a5fa' }}>
               {journal ? 'Edit' : 'Write'} →
             </a>
           </div>
@@ -402,35 +403,42 @@ function DrillDown({ dateStr, trades, journal, pnl, fmt, onClose, onAddTrade }) 
             <div className="space-y-2">
               {journal.market_condition && (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-600">Market:</span>
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Market:</span>
                   <span className="badge badge-blue text-xs">{journal.market_condition}</span>
                 </div>
               )}
               {journal.mindset_rating && (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-600">Mindset:</span>
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Mindset:</span>
                   <div className="flex gap-0.5">
                     {[1,2,3,4,5].map(n => (
-                      <div key={n} className={`w-2.5 h-2.5 rounded-full ${n <= journal.mindset_rating ? 'bg-brand' : 'bg-surface-700'}`} />
+                      <div key={n} style={{
+                        width: 10, height: 10, borderRadius: '50%',
+                        background: n <= journal.mindset_rating ? '#00d395' : 'rgba(255,255,255,0.1)',
+                      }} />
                     ))}
                   </div>
                 </div>
               )}
               {journal.premarket && (
                 <div>
-                  <p className="text-xs text-gray-600 mb-0.5">Pre-market</p>
-                  <p className="text-xs text-gray-400 line-clamp-3 bg-surface-800 rounded-lg px-2.5 py-2">{journal.premarket}</p>
+                  <p className="text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>Pre-market</p>
+                  <p className="text-xs rounded-lg px-2.5 py-2 line-clamp-3"
+                    style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.6)' }}
+                  >{journal.premarket}</p>
                 </div>
               )}
               {journal.postmarket && (
                 <div>
-                  <p className="text-xs text-gray-600 mb-0.5">Post-market</p>
-                  <p className="text-xs text-gray-400 line-clamp-3 bg-surface-800 rounded-lg px-2.5 py-2">{journal.postmarket}</p>
+                  <p className="text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>Post-market</p>
+                  <p className="text-xs rounded-lg px-2.5 py-2 line-clamp-3"
+                    style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.6)' }}
+                  >{journal.postmarket}</p>
                 </div>
               )}
             </div>
           ) : (
-            <p className="text-xs text-gray-600 py-2">No journal entry for this day.</p>
+            <p className="text-xs py-2" style={{ color: 'rgba(255,255,255,0.3)' }}>No journal entry for this day.</p>
           )}
         </div>
       </div>

@@ -3,154 +3,311 @@
 @tailwind utilities;
 
 @layer base {
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
 
   body {
-    @apply bg-surface-950 text-gray-100 font-sans antialiased;
+    background: #080a0f;
+    color: rgba(255, 255, 255, 0.85);
+    font-family: 'Inter', system-ui, sans-serif;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-surface-600 rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-surface-500;
-  }
+  /* 4px premium scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.04); }
+  ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0, 211, 149, 0.4); }
 }
 
 @layer components {
+
+  /* ── Glassmorphism card ─────────────────────────────────────── */
   .card {
-    @apply bg-surface-900 border border-surface-700 rounded-xl;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 24px rgba(0, 0, 0, 0.4);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
-
+  .card:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 4px 24px rgba(0, 0, 0, 0.4),
+      0 0 20px rgba(0, 211, 149, 0.06);
+  }
   .card-header {
-    @apply px-5 py-4 border-b border-surface-700;
+    @apply px-5 py-4;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   }
 
-  .input {
-    @apply w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2
-           text-gray-100 text-sm placeholder-gray-500
-           focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/30
-           transition-all duration-150;
+  /* ── Glassmorphism sidebar ──────────────────────────────────── */
+  .sidebar {
+    background: rgba(8, 10, 15, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
   }
+
+  /* ── Inputs ─────────────────────────────────────────────────── */
+  .input {
+    @apply w-full text-sm text-white;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 10px 14px;
+    outline: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .input::placeholder { color: rgba(255, 255, 255, 0.25); }
+  .input:focus {
+    border-color: rgba(0, 211, 149, 0.5);
+    box-shadow: 0 0 0 3px rgba(0, 211, 149, 0.1);
+  }
+  /* dark bg for select options */
+  .input option { background: #0e1117; color: white; }
 
   .input-label {
-    @apply block text-xs font-medium text-gray-400 mb-1;
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 6px;
   }
 
-  /* Dark text on bright green for max contrast */
+  /* ── Buttons ────────────────────────────────────────────────── */
   .btn-primary {
-    @apply bg-brand hover:bg-brand-hover font-semibold px-4 py-2 rounded-lg
-           transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed text-sm;
-    color: #0a0b0f;
+    background: linear-gradient(135deg, #00d395, #00b37d);
+    color: #0a1a12;
+    font-weight: 700;
+    font-size: 14px;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    box-shadow: 0 4px 16px rgba(0, 211, 149, 0.25);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
   }
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 6px 24px rgba(0, 211, 149, 0.4);
+    transform: translateY(-1px);
+  }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
   .btn-secondary {
-    @apply bg-surface-800 hover:bg-surface-700 border border-surface-600 hover:border-surface-500
-           text-gray-200 font-medium px-4 py-2 rounded-lg
-           transition-all duration-150 text-sm;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+    font-size: 14px;
+    border-radius: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.18);
   }
 
   .btn-danger {
-    @apply bg-red-500/10 hover:bg-red-500/20 text-red-400 font-medium px-4 py-2 rounded-lg
-           transition-all duration-150 text-sm border border-red-500/20;
+    background: rgba(255, 71, 87, 0.1);
+    border: 1px solid rgba(255, 71, 87, 0.3);
+    color: #ff4757;
+    font-weight: 500;
+    font-size: 14px;
+    border-radius: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
   }
+  .btn-danger:hover { background: rgba(255, 71, 87, 0.18); }
 
   .btn-ghost {
-    @apply hover:bg-surface-700 text-gray-400 hover:text-gray-200 font-medium px-3 py-2 rounded-lg
-           transition-all duration-150 text-sm;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 500;
+    font-size: 14px;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.8);
   }
 
-  /* Stat cards: bigger, mono, bold */
+  /* ── Stat typography ─────────────────────────────────────────── */
   .stat-value {
-    @apply text-3xl font-bold font-mono tracking-tight;
+    font-size: 32px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: white;
   }
-
   .stat-label {
-    @apply font-medium uppercase text-gray-500;
     font-size: 11px;
-    letter-spacing: 0.08em;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
   }
 
-  .badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium;
-  }
-
-  .badge-green {
-    @apply bg-emerald-500/10 text-emerald-400 border border-emerald-500/20;
-  }
-
-  .badge-red {
-    @apply bg-red-500/10 text-red-400 border border-red-500/20;
-  }
-
-  .badge-amber {
-    @apply bg-amber-500/10 text-amber-400 border border-amber-500/20;
-  }
-
-  .badge-gray {
-    @apply bg-surface-600 text-gray-400 border border-surface-500;
-  }
-
-  .badge-blue {
-    @apply bg-blue-500/10 text-blue-400 border border-blue-500/20;
-  }
-
-  /* Thin 3px progress bar */
-  .progress-bar-track {
-    @apply bg-surface-700 rounded-full overflow-hidden;
-    height: 3px;
-  }
-
-  /* Nav links: left border accent on active */
-  .nav-link {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-           text-gray-400 hover:text-gray-100 hover:bg-surface-800
-           transition-all duration-150;
-  }
-
-  .nav-link.active {
+  /* ── PnL glow classes ────────────────────────────────────────── */
+  /* These replace text-emerald-400 / text-red-400 for PnL numbers */
+  .pnl-pos {
     color: #00d395;
-    background-color: rgba(0, 211, 149, 0.08);
-    box-shadow: inset 2px 0 0 0 #00d395;
+    text-shadow: 0 0 20px rgba(0, 211, 149, 0.5);
+  }
+  .pnl-neg {
+    color: #ff4757;
+    text-shadow: 0 0 20px rgba(255, 71, 87, 0.5);
+  }
+  .pnl-zero { color: rgba(255, 255, 255, 0.4); }
+
+  /* ── Badges ──────────────────────────────────────────────────── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-green {
+    background: rgba(0, 211, 149, 0.12);
+    color: #00d395;
+    border: 1px solid rgba(0, 211, 149, 0.3);
+  }
+  .badge-red {
+    background: rgba(255, 71, 87, 0.12);
+    color: #ff4757;
+    border: 1px solid rgba(255, 71, 87, 0.3);
+  }
+  .badge-amber {
+    background: rgba(245, 166, 35, 0.12);
+    color: #f5a623;
+    border: 1px solid rgba(245, 166, 35, 0.3);
+  }
+  /* Instrument pill — blue */
+  .badge-blue {
+    background: rgba(59, 130, 246, 0.12);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+  }
+  /* Session pill — purple */
+  .badge-gray {
+    background: rgba(139, 92, 246, 0.12);
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+  }
+  .badge-purple {
+    background: rgba(139, 92, 246, 0.12);
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.2);
   }
 
-  /* Skeleton loading shimmer */
-  .skeleton {
-    @apply animate-skeleton bg-surface-700 rounded;
+  /* ── Progress bars ───────────────────────────────────────────── */
+  .progress-bar-track {
+    height: 5px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.07);
+    overflow: hidden;
   }
 
-  /* Modal overlay */
+  /* ── Nav links ───────────────────────────────────────────────── */
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.5);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    text-decoration: none;
+    min-height: 44px;
+    width: 100%;
+  }
+  .nav-link:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.8);
+  }
+  .nav-link.active {
+    background: rgba(0, 211, 149, 0.1);
+    color: #00d395;
+    box-shadow: inset 3px 0 0 0 #00d395;
+  }
+
+  /* ── Modal ───────────────────────────────────────────────────── */
   .modal-overlay {
-    @apply fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 16px;
   }
-
   .modal-panel {
-    @apply bg-surface-900 border border-surface-700 rounded-2xl w-full shadow-2xl;
+    background: rgba(10, 12, 18, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    width: 100%;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  /* ── Skeleton shimmer ────────────────────────────────────────── */
+  .skeleton {
+    @apply animate-skeleton rounded;
+    background: rgba(255, 255, 255, 0.07);
   }
 }
 
-/* Chart.js global canvas radius */
-canvas {
-  border-radius: 0.5rem;
+/* ── Table rows ───────────────────────────────────────────────────── */
+tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
 }
 
-/* Remove number input spinners */
+/* ── Chart.js canvas border-radius ────────────────────────────────── */
+canvas { border-radius: 8px; }
+
+/* ── Remove number input spinners ──────────────────────────────────── */
 input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type="number"] { -moz-appearance: textfield; }

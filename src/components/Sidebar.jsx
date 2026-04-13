@@ -30,67 +30,105 @@ export default function Sidebar({ onClose }) {
 
   return (
     <>
-      <aside className="flex flex-col h-full bg-surface-900 border-r border-surface-700 w-64">
+      <aside
+        className="sidebar flex flex-col h-full"
+        style={{ width: 240 }}
+      >
         {/* Logo */}
-        <div className="px-4 py-5 border-b border-surface-700">
+        <div className="px-4 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-brand/10 border border-brand/20 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 text-brand" />
+            <div style={{
+              width: 32, height: 32,
+              background: 'rgba(0,211,149,0.12)',
+              border: '1px solid rgba(0,211,149,0.25)',
+              borderRadius: 10,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <TrendingUp style={{ width: 16, height: 16, color: '#00d395' }} />
             </div>
-            <span className="font-semibold text-white text-sm">TradeFloor</span>
+            <span style={{ fontWeight: 700, fontSize: 18, color: 'white', letterSpacing: '-0.01em' }}>
+              TradeFloor
+            </span>
           </div>
         </div>
 
         {/* Account selector */}
-        <div className="px-3 py-3 border-b border-surface-700">
+        <div className="px-3 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <button
             onClick={() => setShowAccountMenu(v => !v)}
-            className="w-full flex items-center justify-between gap-2 px-3 py-2.5 bg-surface-800 hover:bg-surface-700 border border-surface-600 rounded-lg transition-colors"
+            className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl transition-all duration-200"
+            style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
           >
             <div className="flex items-center gap-2 min-w-0">
-              <div className="w-6 h-6 bg-brand/20 rounded-md flex items-center justify-center shrink-0">
-                <span className="text-xs font-bold text-brand">
+              <div style={{
+                width: 26, height: 26,
+                background: 'rgba(0,211,149,0.15)',
+                borderRadius: 8,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#00d395' }}>
                   {selectedAccount?.name?.charAt(0) || '?'}
                 </span>
               </div>
               <div className="min-w-0 text-left">
-                <p className="text-xs font-medium text-gray-100 truncate">
+                <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)' }} className="truncate">
                   {selectedAccount?.name || 'Select Account'}
                 </p>
                 {selectedAccount && (
-                  <p className="text-xs text-gray-500">
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
                     {formatCurrency(selectedAccount.start_balance, 0)}
                   </p>
                 )}
               </div>
             </div>
-            <ChevronDown className={`w-4 h-4 text-gray-500 shrink-0 transition-transform ${showAccountMenu ? 'rotate-180' : ''}`} />
+            <ChevronDown style={{
+              width: 14, height: 14,
+              color: 'rgba(255,255,255,0.3)',
+              flexShrink: 0,
+              transform: showAccountMenu ? 'rotate(180deg)' : 'none',
+              transition: 'transform 0.2s',
+            }} />
           </button>
 
           {showAccountMenu && (
-            <div className="mt-1 bg-surface-800 border border-surface-600 rounded-lg overflow-hidden animate-slide-in">
+            <div className="mt-1.5 overflow-hidden animate-slide-in rounded-xl"
+              style={{ background: 'rgba(8,10,15,0.9)', border: '1px solid rgba(255,255,255,0.08)' }}
+            >
               {accounts.map(acc => (
                 <button
                   key={acc.id}
                   onClick={() => { setSelectedAccount(acc); setShowAccountMenu(false); onClose?.() }}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-surface-700 transition-colors ${
-                    selectedAccount?.id === acc.id ? 'text-brand' : 'text-gray-300'
-                  }`}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors"
+                  style={{ color: selectedAccount?.id === acc.id ? '#00d395' : 'rgba(255,255,255,0.6)' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
-                  <div className="w-5 h-5 bg-brand/20 rounded flex items-center justify-center">
-                    <span className="text-xs font-bold text-brand">{acc.name.charAt(0)}</span>
+                  <div style={{
+                    width: 20, height: 20,
+                    background: 'rgba(0,211,149,0.15)',
+                    borderRadius: 6,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: '#00d395' }}>{acc.name.charAt(0)}</span>
                   </div>
                   <span className="truncate">{acc.name}</span>
                   {selectedAccount?.id === acc.id && (
-                    <span className="ml-auto w-1.5 h-1.5 bg-brand rounded-full" />
+                    <span className="ml-auto" style={{ width: 6, height: 6, borderRadius: '50%', background: '#00d395', display: 'inline-block' }} />
                   )}
                 </button>
               ))}
               <button
                 onClick={() => { setShowNewAccount(true); setShowAccountMenu(false) }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-gray-300 hover:bg-surface-700 transition-colors border-t border-surface-700"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors"
+                style={{ color: 'rgba(255,255,255,0.35)', borderTop: '1px solid rgba(255,255,255,0.06)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; }}
               >
-                <Plus className="w-4 h-4" />
+                <Plus style={{ width: 14, height: 14 }} />
                 <span>Add account</span>
               </button>
             </div>
@@ -107,45 +145,53 @@ export default function Sidebar({ onClose }) {
               onClick={onClose}
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
-              <Icon className="w-4 h-4 shrink-0" />
+              <Icon style={{ width: 16, height: 16, flexShrink: 0 }} />
               {label}
             </NavLink>
           ))}
         </nav>
 
         {/* Bottom: settings + sign out */}
-        <div className="px-3 py-3 border-t border-surface-700 space-y-1">
+        <div className="px-3 py-3 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           {selectedAccount && (
-            <button
-              onClick={() => setShowSettings(true)}
-              className="nav-link w-full"
-            >
-              <Settings className="w-4 h-4 shrink-0" />
+            <button onClick={() => setShowSettings(true)} className="nav-link w-full">
+              <Settings style={{ width: 16, height: 16, flexShrink: 0 }} />
               Account Settings
             </button>
           )}
 
           <div className="flex items-center gap-2 px-3 py-2">
-            <div className="w-7 h-7 bg-surface-700 rounded-full flex items-center justify-center text-xs font-medium text-gray-400">
+            <div style={{
+              width: 28, height: 28,
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)',
+              flexShrink: 0,
+            }}>
               {user?.email?.charAt(0).toUpperCase()}
             </div>
-            <span className="text-xs text-gray-500 truncate flex-1">{user?.email}</span>
-            <button onClick={handleSignOut} className="p-1.5 hover:bg-surface-700 rounded-md transition-colors" title="Sign out">
-              <LogOut className="w-3.5 h-3.5 text-gray-500 hover:text-red-400" />
+            <span className="text-xs truncate flex-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
+              {user?.email}
+            </span>
+            <button
+              onClick={handleSignOut}
+              className="p-1.5 rounded-lg transition-all duration-150"
+              style={{ color: 'rgba(255,255,255,0.3)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,71,87,0.1)'; e.currentTarget.style.color = '#ff4757'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.3)'; }}
+              title="Sign out"
+            >
+              <LogOut style={{ width: 14, height: 14 }} />
             </button>
           </div>
         </div>
       </aside>
 
-      {showNewAccount && (
-        <AccountSetup onClose={() => setShowNewAccount(false)} />
-      )}
-
+      {showNewAccount && <AccountSetup onClose={() => setShowNewAccount(false)} />}
       {showSettings && selectedAccount && (
-        <AccountSetup
-          account={selectedAccount}
-          onClose={() => setShowSettings(false)}
-        />
+        <AccountSetup account={selectedAccount} onClose={() => setShowSettings(false)} />
       )}
     </>
   )

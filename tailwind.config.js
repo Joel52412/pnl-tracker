@@ -6,7 +6,7 @@ export default {
       colors: {
         // ── Surface palette (page / card / elevated backgrounds + borders) ──────
         surface: {
-          950: '#0a0b0f',   // page background
+          950: '#080a0f',   // page background
           900: '#111318',   // card background
           800: '#1a1d24',   // elevated / input background
           700: '#1e2028',   // subtle border
