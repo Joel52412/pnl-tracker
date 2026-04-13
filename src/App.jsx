@@ -8,6 +8,7 @@ import TradeLog from './pages/TradeLog'
 import Calendar from './pages/Calendar'
 import Stats from './pages/Stats'
 import Journal from './pages/Journal'
+import Import from './pages/Import'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="calendar" element={<Calendar />} />
         <Route path="stats" element={<Stats />} />
         <Route path="journal" element={<Journal />} />
+        <Route path="import" element={<Import />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
