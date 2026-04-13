@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 import { LayoutDashboard, BookOpen, CalendarDays, BarChart3, TrendingUp, LogOut, Plus, ChevronDown, Settings, BookText, Upload } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useAccount } from '../contexts/AccountContext'
@@ -189,9 +190,13 @@ export default function Sidebar({ onClose }) {
         </div>
       </aside>
 
-      {showNewAccount && <AccountSetup onClose={() => setShowNewAccount(false)} />}
-      {showSettings && selectedAccount && (
-        <AccountSetup account={selectedAccount} onClose={() => setShowSettings(false)} />
+      {showNewAccount && createPortal(
+        <AccountSetup onClose={() => setShowNewAccount(false)} />,
+        document.body
+      )}
+      {showSettings && selectedAccount && createPortal(
+        <AccountSetup account={selectedAccount} onClose={() => setShowSettings(false)} />,
+        document.body
       )}
     </>
   )
