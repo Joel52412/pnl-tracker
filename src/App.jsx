@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard'
 import TradeLog from './pages/TradeLog'
 import Calendar from './pages/Calendar'
 import Stats from './pages/Stats'
+import Journal from './pages/Journal'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -39,6 +40,7 @@ export default function App() {
         <Route path="trades" element={<TradeLog />} />
         <Route path="calendar" element={<Calendar />} />
         <Route path="stats" element={<Stats />} />
+        <Route path="journal" element={<Journal />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -5,13 +5,16 @@ import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { AccountProvider } from './contexts/AccountContext.jsx'
+import { HideProvider } from './contexts/HideContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
         <AccountProvider>
-          <App />
+          <HideProvider>
+            <App />
+          </HideProvider>
         </AccountProvider>
       </AuthProvider>
     </BrowserRouter>

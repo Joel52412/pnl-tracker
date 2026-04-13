@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, CalendarDays, BarChart3, TrendingUp, LogOut, Plus, ChevronDown, Settings } from 'lucide-react'
+import { LayoutDashboard, BookOpen, CalendarDays, BarChart3, TrendingUp, LogOut, Plus, ChevronDown, Settings, BookText } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useAccount } from '../contexts/AccountContext'
 import { useState } from 'react'
@@ -10,6 +10,7 @@ const NAV = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard', end: true },
   { to: '/trades', icon: BookOpen, label: 'Trade Log' },
   { to: '/calendar', icon: CalendarDays, label: 'Calendar' },
+  { to: '/journal', icon: BookText, label: 'Journal' },
   { to: '/stats', icon: BarChart3, label: 'Statistics' },
 ]
 

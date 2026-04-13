@@ -7,7 +7,6 @@ import {
 } from 'lucide-react'
 
 const SESSIONS = ['All', 'London', 'NY', 'Asia', 'Overlap', 'Other']
-const INSTRUMENTS = ['All', 'MNQ', 'NQ', 'MES', 'ES', 'Other']
 
 export default function TradeLog() {
   const { trades, deleteTrade, loadingTrades } = useAccount()
@@ -15,7 +14,7 @@ export default function TradeLog() {
   const [deleteId, setDeleteId] = useState(null)
   const [search, setSearch] = useState('')
   const [sessionFilter, setSessionFilter] = useState('All')
-  const [instrumentFilter, setInstrumentFilter] = useState('All')
+  const [instrumentSearch, setInstrumentSearch] = useState('')
   const [sortKey, setSortKey] = useState('date')
   const [sortDir, setSortDir] = useState('desc')
 
@@ -27,7 +26,7 @@ export default function TradeLog() {
   const filtered = trades
     .filter(t => {
       if (sessionFilter !== 'All' && t.session !== sessionFilter) return false
-      if (instrumentFilter !== 'All' && t.instrument !== instrumentFilter) return false
+      if (instrumentSearch && !t.instrument?.toLowerCase().includes(instrumentSearch.toLowerCase())) return false
       if (search) {
         const q = search.toLowerCase()
         if (
@@ -117,9 +116,13 @@ export default function TradeLog() {
             <select value={sessionFilter} onChange={e => setSessionFilter(e.target.value)} className="input w-auto">
               {SESSIONS.map(s => <option key={s} value={s}>{s === 'All' ? 'All Sessions' : s}</option>)}
             </select>
-            <select value={instrumentFilter} onChange={e => setInstrumentFilter(e.target.value)} className="input w-auto">
-              {INSTRUMENTS.map(i => <option key={i} value={i}>{i === 'All' ? 'All Instruments' : i}</option>)}
-            </select>
+            <input
+              type="text"
+              value={instrumentSearch}
+              onChange={e => setInstrumentSearch(e.target.value)}
+              placeholder="Instrument..."
+              className="input w-32"
+            />
           </div>
         </div>
       </div>

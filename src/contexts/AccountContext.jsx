@@ -9,6 +9,7 @@ export function AccountProvider({ children }) {
   const [accounts, setAccounts] = useState([])
   const [selectedAccount, setSelectedAccountState] = useState(null)
   const [trades, setTrades] = useState([])
+  const [payouts, setPayouts] = useState([])
   const [loadingAccounts, setLoadingAccounts] = useState(true)
   const [loadingTrades, setLoadingTrades] = useState(false)
 
@@ -37,14 +38,20 @@ export function AccountProvider({ children }) {
     setLoadingTrades(false)
   }, [])
 
-  // Load accounts on login
+  const fetchPayouts = useCallback(async (accountId) => {
+    if (!accountId) return
+    const { data, error } = await supabase
+      .from('payouts')
+      .select('*')
+      .eq('account_id', accountId)
+      .order('date', { ascending: false })
+    if (!error) setPayouts(data || [])
+  }, [])
+
   useEffect(() => {
     if (!user) {
-      setAccounts([])
-      setSelectedAccountState(null)
-      setTrades([])
-      setLoadingAccounts(false)
-      return
+      setAccounts([]); setSelectedAccountState(null); setTrades([]); setPayouts([])
+      setLoadingAccounts(false); return
     }
     fetchAccounts().then(data => {
       if (data?.length) {
@@ -55,11 +62,14 @@ export function AccountProvider({ children }) {
     })
   }, [user, fetchAccounts])
 
-  // Fetch trades when account changes
   useEffect(() => {
-    if (selectedAccount) fetchTrades(selectedAccount.id)
-    else setTrades([])
-  }, [selectedAccount, fetchTrades])
+    if (selectedAccount) {
+      fetchTrades(selectedAccount.id)
+      fetchPayouts(selectedAccount.id)
+    } else {
+      setTrades([]); setPayouts([])
+    }
+  }, [selectedAccount, fetchTrades, fetchPayouts])
 
   function setSelectedAccount(account) {
     setSelectedAccountState(account)
@@ -68,10 +78,7 @@ export function AccountProvider({ children }) {
 
   async function createAccount(data) {
     const { data: created, error } = await supabase
-      .from('accounts')
-      .insert({ ...data, user_id: user.id })
-      .select()
-      .single()
+      .from('accounts').insert({ ...data, user_id: user.id }).select().single()
     if (error) throw error
     await fetchAccounts()
     setSelectedAccount(created)
@@ -79,10 +86,7 @@ export function AccountProvider({ children }) {
   }
 
   async function updateAccount(id, data) {
-    const { error } = await supabase
-      .from('accounts')
-      .update(data)
-      .eq('id', id)
+    const { error } = await supabase.from('accounts').update(data).eq('id', id)
     if (error) throw error
     const updated = await fetchAccounts()
     if (selectedAccount?.id === id) {
@@ -95,14 +99,9 @@ export function AccountProvider({ children }) {
     const { error } = await supabase.from('accounts').delete().eq('id', id)
     if (error) throw error
     const updated = await fetchAccounts()
-    if (selectedAccount?.id === id) {
-      setSelectedAccount(updated?.[0] || null)
-    }
+    if (selectedAccount?.id === id) setSelectedAccount(updated?.[0] || null)
   }
 
-  // Deletes all user data then removes the auth user record via RPC.
-  // The SQL function (002_delete_user_function.sql) runs as SECURITY DEFINER
-  // so it can delete from auth.users.
   async function deleteProfile() {
     const { error } = await supabase.rpc('delete_user')
     if (error) throw error
@@ -129,23 +128,22 @@ export function AccountProvider({ children }) {
     await fetchTrades(selectedAccount.id)
   }
 
+  async function addPayout(data) {
+    const { error } = await supabase
+      .from('payouts')
+      .insert({ ...data, account_id: selectedAccount.id, user_id: user.id })
+    if (error) throw error
+    await fetchPayouts(selectedAccount.id)
+  }
+
   return (
     <AccountContext.Provider value={{
-      accounts,
-      selectedAccount,
-      setSelectedAccount,
-      trades,
-      loadingAccounts,
-      loadingTrades,
-      fetchAccounts,
-      fetchTrades: () => fetchTrades(selectedAccount?.id),
-      createAccount,
-      updateAccount,
-      deleteAccount,
-      deleteProfile,
-      addTrade,
-      deleteTrade,
-      updateTrade,
+      accounts, selectedAccount, setSelectedAccount,
+      trades, payouts, loadingAccounts, loadingTrades,
+      fetchAccounts, fetchTrades: () => fetchTrades(selectedAccount?.id),
+      createAccount, updateAccount, deleteAccount, deleteProfile,
+      addTrade, deleteTrade, updateTrade,
+      addPayout,
     }}>
       {children}
     </AccountContext.Provider>
