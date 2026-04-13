@@ -30,8 +30,8 @@ function StatCard({ label, value, sub, accent, icon: Icon }) {
 }
 
 const chartTooltipDefaults = {
-  backgroundColor: '#13131c',
-  borderColor: '#2a2a38',
+  backgroundColor: '#111318',
+  borderColor: '#2a2d36',
   borderWidth: 1,
   titleColor: '#9ca3af',
   bodyColor: '#f3f4f6',
@@ -77,8 +77,8 @@ export default function Stats() {
     datasets: [{
       label: 'Daily PnL',
       data: dailyPnLArray,
-      backgroundColor: dailyPnLArray.map(v => v >= 0 ? 'rgba(52,211,153,0.6)' : 'rgba(248,113,113,0.6)'),
-      borderColor: dailyPnLArray.map(v => v >= 0 ? 'rgba(52,211,153,0.9)' : 'rgba(248,113,113,0.9)'),
+      backgroundColor: dailyPnLArray.map(v => v >= 0 ? 'rgba(0,211,149,0.5)' : 'rgba(255,77,77,0.5)'),
+      borderColor: dailyPnLArray.map(v => v >= 0 ? 'rgba(0,211,149,0.8)' : 'rgba(255,77,77,0.8)'),
       borderWidth: 1,
       borderRadius: 3,
     }],
@@ -112,7 +112,7 @@ export default function Stats() {
 
   // Session doughnut
   const sessionEntries = Object.entries(s.sessionMap)
-  const COLORS = ['#6366f1', '#34d399', '#f59e0b', '#f87171', '#60a5fa', '#a78bfa']
+  const COLORS = ['#00d395', '#3b82f6', '#f5a623', '#ff4d4d', '#a78bfa', '#60a5fa']
   const doughnutData = sessionEntries.length > 0 ? {
     labels: sessionEntries.map(([k]) => k),
     datasets: [{
@@ -140,8 +140,8 @@ export default function Stats() {
     datasets: [{
       label: 'PnL by Instrument',
       data: instrEntries.map(([, v]) => v.pnl),
-      backgroundColor: instrEntries.map(([, v]) => v.pnl >= 0 ? 'rgba(52,211,153,0.6)' : 'rgba(248,113,113,0.6)'),
-      borderColor: instrEntries.map(([, v]) => v.pnl >= 0 ? 'rgba(52,211,153,0.9)' : 'rgba(248,113,113,0.9)'),
+      backgroundColor: instrEntries.map(([, v]) => v.pnl >= 0 ? 'rgba(0,211,149,0.5)' : 'rgba(255,77,77,0.5)'),
+      borderColor: instrEntries.map(([, v]) => v.pnl >= 0 ? 'rgba(0,211,149,0.8)' : 'rgba(255,77,77,0.8)'),
       borderWidth: 1,
       borderRadius: 4,
     }],

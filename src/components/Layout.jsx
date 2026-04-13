@@ -1,16 +1,23 @@
 import { useState, useEffect } from 'react'
-import { Outlet } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { Outlet, NavLink } from 'react-router-dom'
+import { LayoutDashboard, BookOpen, CalendarDays, BarChart3, BookText, Upload } from 'lucide-react'
 import Sidebar from './Sidebar'
 import { useAccount } from '../contexts/AccountContext'
 import AccountSetup from './AccountSetup'
 
+const BOTTOM_NAV = [
+  { to: '/',        icon: LayoutDashboard, label: 'Dashboard', end: true },
+  { to: '/trades',  icon: BookOpen,        label: 'Trades' },
+  { to: '/calendar',icon: CalendarDays,    label: 'Calendar' },
+  { to: '/journal', icon: BookText,        label: 'Journal' },
+  { to: '/stats',   icon: BarChart3,       label: 'Stats' },
+  { to: '/import',  icon: Upload,          label: 'Import' },
+]
+
 export default function Layout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { accounts, loadingAccounts, selectedAccount } = useAccount()
+  const { accounts, loadingAccounts } = useAccount()
   const [showFirstSetup, setShowFirstSetup] = useState(false)
 
-  // Prompt to create first account
   useEffect(() => {
     if (!loadingAccounts && accounts.length === 0) {
       setShowFirstSetup(true)
@@ -19,38 +26,36 @@ export default function Layout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-surface-950">
-      {/* Desktop sidebar */}
+      {/* Desktop sidebar — hidden on mobile */}
       <div className="hidden md:flex shrink-0">
         <Sidebar />
       </div>
 
-      {/* Mobile sidebar drawer */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setSidebarOpen(false)} />
-          <div className="relative w-64 h-full animate-slide-in">
-            <Sidebar onClose={() => setSidebarOpen(false)} />
-          </div>
-        </div>
-      )}
-
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile top bar */}
-        <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-surface-700 bg-surface-900">
-          <button onClick={() => setSidebarOpen(true)} className="p-1.5 hover:bg-surface-700 rounded-lg transition-colors">
-            <Menu className="w-5 h-5 text-gray-400" />
-          </button>
-          <span className="text-sm font-semibold text-white">
-            {selectedAccount?.name || 'PnL Tracker'}
-          </span>
-          <div className="w-8" />
-        </div>
-
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
           <Outlet />
         </main>
       </div>
+
+      {/* Mobile bottom tab bar — hidden on desktop */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-surface-900 border-t border-surface-700 flex">
+        {BOTTOM_NAV.map(({ to, icon: Icon, label, end }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            className={({ isActive }) =>
+              `flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-[10px] font-medium transition-colors ${
+                isActive ? 'text-brand' : 'text-gray-500'
+              }`
+            }
+          >
+            <Icon className="w-5 h-5" />
+            {label}
+          </NavLink>
+        ))}
+      </nav>
 
       {/* First-time account setup */}
       {showFirstSetup && (

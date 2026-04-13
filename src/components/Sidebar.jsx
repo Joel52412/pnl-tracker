@@ -37,7 +37,7 @@ export default function Sidebar({ onClose }) {
             <div className="w-8 h-8 bg-brand/10 border border-brand/20 rounded-lg flex items-center justify-center">
               <TrendingUp className="w-4 h-4 text-brand" />
             </div>
-            <span className="font-semibold text-white text-sm">PnL Tracker</span>
+            <span className="font-semibold text-white text-sm">TradeFloor</span>
           </div>
         </div>
 

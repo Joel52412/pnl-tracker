@@ -17,7 +17,6 @@ export default function EquityCurveChart({ curve, startBalance, floor }) {
     )
   }
 
-  // Prepend start point
   const allPoints = [{ date: 'Start', balance: startBalance }, ...curve]
   const labels = allPoints.map(p => p.date === 'Start' ? 'Start' : formatDateShort(p.date))
   const data = allPoints.map(p => p.balance)
@@ -25,21 +24,20 @@ export default function EquityCurveChart({ curve, startBalance, floor }) {
   const floorLine = floor !== undefined ? allPoints.map(() => floor) : null
 
   const isPositive = data[data.length - 1] >= startBalance
+  const lineColor = isPositive ? '#00d395' : '#ff4d4d'
 
   const datasets = [
     {
       label: 'Balance',
       data,
-      borderColor: isPositive ? '#34d399' : '#f87171',
-      backgroundColor: isPositive
-        ? 'rgba(52,211,153,0.08)'
-        : 'rgba(248,113,113,0.08)',
+      borderColor: lineColor,
+      backgroundColor: 'transparent',
       borderWidth: 2,
-      fill: true,
+      fill: false,
       tension: 0.3,
       pointRadius: data.length > 30 ? 0 : 3,
       pointHoverRadius: 5,
-      pointBackgroundColor: isPositive ? '#34d399' : '#f87171',
+      pointBackgroundColor: lineColor,
       pointBorderColor: 'transparent',
     },
   ]
@@ -48,7 +46,7 @@ export default function EquityCurveChart({ curve, startBalance, floor }) {
     datasets.push({
       label: 'Drawdown Floor',
       data: floorLine,
-      borderColor: 'rgba(239,68,68,0.5)',
+      borderColor: 'rgba(255,77,77,0.45)',
       borderWidth: 1,
       borderDash: [4, 3],
       fill: false,
@@ -65,8 +63,8 @@ export default function EquityCurveChart({ curve, startBalance, floor }) {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#13131c',
-        borderColor: '#2a2a38',
+        backgroundColor: '#111318',
+        borderColor: '#2a2d36',
         borderWidth: 1,
         titleColor: '#9ca3af',
         bodyColor: '#f3f4f6',

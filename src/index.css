@@ -43,39 +43,45 @@
     @apply w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2
            text-gray-100 text-sm placeholder-gray-500
            focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/30
-           transition-colors;
+           transition-all duration-150;
   }
 
   .input-label {
     @apply block text-xs font-medium text-gray-400 mb-1;
   }
 
+  /* Dark text on bright green for max contrast */
   .btn-primary {
-    @apply bg-brand hover:bg-brand-hover text-white font-medium px-4 py-2 rounded-lg
-           transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm;
+    @apply bg-brand hover:bg-brand-hover font-semibold px-4 py-2 rounded-lg
+           transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed text-sm;
+    color: #0a0b0f;
   }
 
   .btn-secondary {
-    @apply bg-surface-700 hover:bg-surface-600 text-gray-200 font-medium px-4 py-2 rounded-lg
-           transition-colors text-sm;
+    @apply bg-surface-800 hover:bg-surface-700 border border-surface-600 hover:border-surface-500
+           text-gray-200 font-medium px-4 py-2 rounded-lg
+           transition-all duration-150 text-sm;
   }
 
   .btn-danger {
     @apply bg-red-500/10 hover:bg-red-500/20 text-red-400 font-medium px-4 py-2 rounded-lg
-           transition-colors text-sm border border-red-500/20;
+           transition-all duration-150 text-sm border border-red-500/20;
   }
 
   .btn-ghost {
     @apply hover:bg-surface-700 text-gray-400 hover:text-gray-200 font-medium px-3 py-2 rounded-lg
-           transition-colors text-sm;
+           transition-all duration-150 text-sm;
   }
 
+  /* Stat cards: bigger, mono, bold */
   .stat-value {
-    @apply text-2xl font-bold font-mono tracking-tight;
+    @apply text-3xl font-bold font-mono tracking-tight;
   }
 
   .stat-label {
-    @apply text-xs font-medium text-gray-500 uppercase tracking-wider;
+    @apply font-medium uppercase text-gray-500;
+    font-size: 11px;
+    letter-spacing: 0.08em;
   }
 
   .badge {
@@ -102,26 +108,46 @@
     @apply bg-blue-500/10 text-blue-400 border border-blue-500/20;
   }
 
+  /* Thin 3px progress bar */
   .progress-bar-track {
-    @apply h-2 bg-surface-700 rounded-full overflow-hidden;
+    @apply bg-surface-700 rounded-full overflow-hidden;
+    height: 3px;
   }
 
+  /* Nav links: left border accent on active */
   .nav-link {
     @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-           text-gray-400 hover:text-gray-100 hover:bg-surface-700 transition-colors;
+           text-gray-400 hover:text-gray-100 hover:bg-surface-800
+           transition-all duration-150;
   }
 
   .nav-link.active {
-    @apply bg-brand/10 text-brand border border-brand/20;
+    color: #00d395;
+    background-color: rgba(0, 211, 149, 0.08);
+    box-shadow: inset 2px 0 0 0 #00d395;
+  }
+
+  /* Skeleton loading shimmer */
+  .skeleton {
+    @apply animate-skeleton bg-surface-700 rounded;
+  }
+
+  /* Modal overlay */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4;
+  }
+
+  .modal-panel {
+    @apply bg-surface-900 border border-surface-700 rounded-2xl w-full shadow-2xl;
   }
 }
 
-/* Chart.js dark overrides */
+/* Chart.js global canvas radius */
 canvas {
   border-radius: 0.5rem;
 }
 
-/* Custom number input - remove arrows */
+/* Remove number input spinners */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
