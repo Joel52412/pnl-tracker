@@ -32,8 +32,9 @@ CREATE TABLE IF NOT EXISTS journals (
   "date" DATE NOT NULL,
   premarket TEXT,
   postmarket TEXT,
+  mindset TEXT,
   mindset_rating INTEGER CHECK (mindset_rating BETWEEN 1 AND 5),
-  market_condition TEXT CHECK (market_condition IN ('trending', 'ranging', 'volatile', 'choppy', 'news')),
+  market_condition TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   UNIQUE(account_id, "date")
 );
