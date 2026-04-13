@@ -1,7 +1,6 @@
 // ─── CSV Text Parser ──────────────────────────────────────────────────────────
 
 export function parseCSVText(text) {
-  // Strip BOM, normalise line endings
   const clean = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n')
   const lines = clean.split('\n')
 
@@ -12,7 +11,7 @@ export function parseCSVText(text) {
     for (let i = 0; i < line.length; i++) {
       const c = line[i]
       if (c === '"') {
-        if (inQ && line[i + 1] === '"') { cell += '"'; i++ } // escaped quote
+        if (inQ && line[i + 1] === '"') { cell += '"'; i++ }
         else inQ = !inQ
       } else if (c === ',' && !inQ) {
         cells.push(cell.trim()); cell = ''
@@ -24,7 +23,6 @@ export function parseCSVText(text) {
     return cells
   }
 
-  // Find first non-empty line as the header row
   let hi = -1
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].trim()) { hi = i; break }
@@ -44,65 +42,127 @@ export function parseCSVText(text) {
 }
 
 // ─── Broker Auto-detection ────────────────────────────────────────────────────
+//
+// Keys returned (used throughout this file and Import.jsx):
+//   'NinjaTrader'   — NT8 performance export
+//   'Tradovate'     — Tradovate trade history (boughtTimestamp/soldTimestamp)
+//   'MT5 Toolbox'   — MT5 Toolbox History tab export (Profit/Loss column)
+//   'MT5 MQL5'      — MT5 MQL5 script export (Swap + Type columns)
 
 export function detectBroker(headers) {
-  const lc = headers.map(h => h.toLowerCase().trim())
-  if (lc.includes('market pos.')) return 'NinjaTrader'
-  if (lc.includes('realizedpnl')) return 'Tradovate'
-  if (lc.includes('position') && lc.includes('swap')) return 'MT5'
+  const lc = new Set(headers.map(h => h.toLowerCase().trim()))
+
+  if (lc.has('market pos.'))                      return 'NinjaTrader'
+  if (lc.has('boughttimestamp') || lc.has('soldtimestamp')) return 'Tradovate'
+  if (lc.has('profit/loss') && lc.has('open time')) return 'MT5 Toolbox'
+  if (lc.has('swap') && lc.has('open time') && lc.has('close time')) return 'MT5 MQL5'
+
   return null
 }
 
 // ─── Session Detection ────────────────────────────────────────────────────────
+// Mapped to the app's session values: London | Overlap | NY | Asia
 
 function detectSession(d) {
   if (!d || isNaN(d.getTime())) return null
   const h = d.getUTCHours()
-  if (h < 12) return 'London'
-  if (h < 16) return 'Overlap'
-  return 'NY'
+  if (h >= 7  && h < 13) return 'London'   //  7–12 UTC  (London session)
+  if (h >= 13 && h < 17) return 'Overlap'  // 13–16 UTC  (London + NY overlap)
+  if (h >= 17 && h < 20) return 'NY'       // 17–19 UTC  (NY afternoon)
+  return 'Asia'                             //  0–6 + 20–23 UTC
 }
 
+// ─── Instrument Cleaning ─────────────────────────────────────────────────────
+// Strips CME-style contract month suffixes and adds slashes to Forex/Crypto pairs.
+//
+// Contract month letters (CME/CBOT): F G H J K M N Q U V X Z
+// Pattern: TICKER + MONTH_LETTER + YEAR_DIGITS  e.g. NQH5, MNQM6, ESH25
+
+const MONTH_LETTERS = new Set('FGHJKMNQUVXZ'.split(''))
+
+export function cleanInstrument(symbol) {
+  if (!symbol) return symbol
+  const s = symbol.trim().toUpperCase()
+  if (!s) return s
+
+  // Already contains a slash — leave as-is
+  if (s.includes('/')) return s
+
+  // --- Strip futures contract month suffix ---
+  // Match trailing [month letter][1–2 digit year], e.g. H5, M25, Z4
+  const stripped = s.replace(/[FGHJKMNQUVXZ]\d{1,2}$/, '')
+  if (stripped && stripped !== s && stripped.length >= 2) {
+    return stripped
+  }
+
+  // --- Convert 6-letter XXXYYY → XXX/YYY (Forex / Crypto) ---
+  // Only apply when every character is a letter (no digits, no existing slash)
+  if (/^[A-Z]{6}$/.test(s)) {
+    return s.slice(0, 3) + '/' + s.slice(3)
+  }
+
+  return s
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function safeNum(v, fallback = 0) {
-  const n = parseFloat(v)
+  const n = parseFloat(String(v).replace(/[$,\s]/g, '').replace(/^\((.+)\)$/, '-$1'))
   return isNaN(n) ? fallback : n
 }
 
-function toDate(d) {
-  return d.toISOString().split('T')[0]
+function safeNumRequired(v) {
+  const n = safeNum(v, NaN)
+  return isNaN(n) ? null : n
 }
 
-function round2(n) {
-  return Math.round(n * 100) / 100
+function round2(n) { return Math.round(n * 100) / 100 }
+
+// Parse various datetime string formats to a Date object
+function parseDateTime(str) {
+  if (!str || !str.trim()) return null
+  const s = str.trim()
+
+  // MT5 dot format: "2024.01.15 14:30:45"
+  if (/^\d{4}\.\d{2}\.\d{2}\s+\d{2}:\d{2}/.test(s)) {
+    const iso = s.replace(/^(\d{4})\.(\d{2})\.(\d{2})\s+(.+)$/, '$1-$2-$3T$4Z')
+    const d = new Date(iso)
+    return isNaN(d.getTime()) ? null : d
+  }
+
+  // ISO / RFC / most other formats
+  const d = new Date(s)
+  return isNaN(d.getTime()) ? null : d
+}
+
+function toDateStr(d) {
+  // Returns YYYY-MM-DD from a Date, always using UTC date
+  return d.toISOString().split('T')[0]
 }
 
 // ─── NinjaTrader 8 ────────────────────────────────────────────────────────────
 // Columns: Trade#, Instrument, Market pos., Quantity, Entry price, Exit price,
 //          Entry time, Exit time, Profit, Commission, MAE, MFE, ETD, Bars in trade
-// pnl = Profit - Commission (Commission is a positive cost in NT8 exports)
+// pnl = Profit − |Commission|   (NT8 shows Commission as a positive cost value)
 
 export function parseNinjaTrader(rows) {
   const trades = []
   for (const row of rows) {
     const profitStr = row['Profit']?.trim()
-    if (!profitStr || profitStr === '') continue
+    if (!profitStr) continue
+    const profit = safeNumRequired(profitStr)
+    if (profit === null) continue  // skip summary rows (text like "Performance")
 
-    const profit = safeNum(profitStr, NaN)
-    if (isNaN(profit)) continue // skip summary/empty rows
+    const commission = Math.abs(safeNum(row['Commission']))
+    const pnl = round2(profit - commission)
 
-    const commission = safeNum(row['Commission'])
-    const pnl = round2(profit - Math.abs(commission)) // commission is a cost
-
-    const entryTime = row['Entry time']?.trim()
-    if (!entryTime) continue
-
-    const d = new Date(entryTime)
-    if (isNaN(d.getTime())) continue
+    const d = parseDateTime(row['Entry time'])
+    if (!d) continue
 
     trades.push({
-      date: toDate(d),
+      date: toDateStr(d),
       pnl,
-      instrument: row['Instrument']?.trim() || null,
+      instrument: cleanInstrument(row['Instrument']?.trim() || '') || null,
       session: detectSession(d),
       r_value: null,
       notes: null,
@@ -112,40 +172,29 @@ export function parseNinjaTrader(rows) {
 }
 
 // ─── Tradovate ────────────────────────────────────────────────────────────────
-// Columns: id, accountId, timestamp, action, quantity, symbol, price, fees, realizedPnl
-// pnl = realizedPnl - fees
-// Strip contract month from symbol: NQH5 → NQ, MNQH5 → MNQ
-
-const CONTRACT_MONTH_RE = /[FGHJKMNQUVXZ]\d{1,4}$/
-
-function stripContractMonth(symbol) {
-  const stripped = symbol.replace(CONTRACT_MONTH_RE, '')
-  return stripped || symbol // fallback to original if strip removes everything
-}
+// Columns: symbol, _priceFormat, _priceFormatType, _tickSize, buyFillId,
+//          sellFillId, qty, buyPrice, sellPrice, pnl, boughtTimestamp,
+//          soldTimestamp, duration
+// pnl column may contain "$250.00" or "-$120.50" — strip $ before parsing
 
 export function parseTradovate(rows) {
   const trades = []
   for (const row of rows) {
-    const realizedStr = row['realizedPnl']?.trim()
-    if (!realizedStr || realizedStr === '') continue
-    const realizedPnl = parseFloat(realizedStr)
-    if (isNaN(realizedPnl)) continue
+    const pnlStr = row['pnl']?.trim()
+    if (!pnlStr) continue
+    const pnl = safeNumRequired(pnlStr)
+    if (pnl === null) continue
 
-    const fees = safeNum(row['fees'])
-    const pnl = round2(realizedPnl - Math.abs(fees))
-
-    const ts = row['timestamp']?.trim()
-    if (!ts) continue
-    const d = new Date(ts)
-    if (isNaN(d.getTime())) continue
+    // Use boughtTimestamp for date and session
+    const d = parseDateTime(row['boughtTimestamp'])
+    if (!d) continue
 
     const rawSymbol = row['symbol']?.trim() || ''
-    const instrument = rawSymbol ? stripContractMonth(rawSymbol) : null
 
     trades.push({
-      date: toDate(d),
-      pnl,
-      instrument,
+      date: toDateStr(d),
+      pnl: round2(pnl),
+      instrument: rawSymbol ? cleanInstrument(rawSymbol) : null,
       session: detectSession(d),
       r_value: null,
       notes: null,
@@ -154,47 +203,68 @@ export function parseTradovate(rows) {
   return trades
 }
 
-// ─── MT5 ─────────────────────────────────────────────────────────────────────
-// Columns: Position, Symbol, Action, Time, Price, SL, TP, Volume,
-//          Commission, Swap, Profit, Balance, Comment
-// Filter: Action = "buy" or "sell"
-// pnl = Profit + Commission + Swap
-// Time format: "2024.01.15 14:30:45"
+// ─── MT5 Format A — Toolbox History Tab Export ────────────────────────────────
+// Columns: Order, Profit/Loss, Ticket, Open Price, Close Price,
+//          Open Time, Close Time, Symbol, Lots
+// All rows are closed trades; no row-type filtering needed.
+// date / session from Close Time
 
-function parseMT5Date(str) {
-  // "2024.01.15 14:30:45" → ISO 8601
-  return str.replace(
-    /^(\d{4})\.(\d{2})\.(\d{2})\s+(\d{2}:\d{2}:\d{2})$/,
-    '$1-$2-$3T$4Z'
-  )
-}
-
-export function parseMT5(rows) {
+export function parseMT5Toolbox(rows) {
   const trades = []
   for (const row of rows) {
-    const action = row['Action']?.trim().toLowerCase()
-    if (action !== 'buy' && action !== 'sell') continue
+    const pnlStr = row['Profit/Loss']?.trim()
+    if (!pnlStr) continue
+    const pnl = safeNumRequired(pnlStr)
+    if (pnl === null) continue
 
-    const profitStr = row['Profit']?.trim()
-    if (!profitStr || profitStr === '') continue
-    const profit = parseFloat(profitStr)
-    if (isNaN(profit)) continue
+    const d = parseDateTime(row['Close Time'])
+    if (!d) continue
 
-    const commission = safeNum(row['Commission'])
-    const swap = safeNum(row['Swap'])
-    const pnl = round2(profit + commission + swap)
-
-    const timeStr = row['Time']?.trim()
-    if (!timeStr) continue
-
-    const isoStr = parseMT5Date(timeStr)
-    const d = new Date(isoStr)
-    if (isNaN(d.getTime())) continue
+    const symbol = row['Symbol']?.trim() || ''
 
     trades.push({
-      date: isoStr.split('T')[0],
+      date: toDateStr(d),
+      pnl: round2(pnl),
+      instrument: symbol ? cleanInstrument(symbol) : null,
+      session: detectSession(d),
+      r_value: null,
+      notes: null,
+    })
+  }
+  return trades
+}
+
+// ─── MT5 Format B — MQL5 Script Export ───────────────────────────────────────
+// Columns: Open Time, Ticket, Symbol, Type, Volume, Open Price, S/L, T/P,
+//          Close Time, Close Price, Commission, Swap, Profit
+// Filter: only rows where Type contains "buy" or "sell" (skip balance/deposit rows)
+// pnl = Profit + Commission + Swap   (Commission and Swap are usually negative)
+// date / session from Close Time
+
+export function parseMT5MQL5(rows) {
+  const trades = []
+  for (const row of rows) {
+    const type = row['Type']?.trim().toLowerCase() || ''
+    if (!type.includes('buy') && !type.includes('sell')) continue
+
+    const profitStr = row['Profit']?.trim()
+    if (!profitStr) continue
+    const profit = safeNumRequired(profitStr)
+    if (profit === null) continue
+
+    const commission = safeNum(row['Commission'])
+    const swap       = safeNum(row['Swap'])
+    const pnl        = round2(profit + commission + swap)
+
+    const d = parseDateTime(row['Close Time'])
+    if (!d) continue
+
+    const symbol = row['Symbol']?.trim() || ''
+
+    trades.push({
+      date: toDateStr(d),
       pnl,
-      instrument: row['Symbol']?.trim() || null,
+      instrument: symbol ? cleanInstrument(symbol) : null,
       session: detectSession(d),
       r_value: null,
       notes: null,
@@ -209,7 +279,8 @@ export function parseTrades(rows, broker) {
   switch (broker) {
     case 'NinjaTrader': return parseNinjaTrader(rows)
     case 'Tradovate':   return parseTradovate(rows)
-    case 'MT5':         return parseMT5(rows)
+    case 'MT5 Toolbox': return parseMT5Toolbox(rows)
+    case 'MT5 MQL5':    return parseMT5MQL5(rows)
     default:            return []
   }
 }
