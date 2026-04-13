@@ -1,121 +1,12 @@
 import { useState } from 'react'
-import { Eye, EyeOff, Plus, Shield, Clock, Target, Calendar, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
+import { Eye, EyeOff, Plus, Shield, Clock, Target, Calendar, TrendingUp, TrendingDown, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
 import { calcEvalMetrics } from '../utils/calculations'
 import { formatCurrency, formatDate, pnlClass } from '../utils/formatters'
 import { useMoney, useHide } from '../contexts/HideContext'
 import EquityCurveChart from './EquityCurveChart'
 import AddTradeModal from './AddTradeModal'
 
-// ── MLL → TARGET position bar ────────────────────────────────────────────────
-// Shows where the current balance sits between the drawdown floor (MLL) and
-// the profit target. Red fill left of current, green fill right.
-function BalancePositionBar({ mll, target, current, startBalance, fmt }) {
-  const range    = target - mll
-  const pct      = range > 0 ? Math.max(0, Math.min(100, ((current - mll) / range) * 100)) : 0
-  const remaining = Math.max(0, target - current)
-  const atStart  = startBalance != null && Math.abs(current - startBalance) < 1
-
-  return (
-    <div className="card p-5">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <span className="stat-label">Account Position</span>
-        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.06em' }}>
-          {pct.toFixed(1)}% to target
-        </span>
-      </div>
-
-      {/* Bar */}
-      <div style={{ position: 'relative', marginBottom: 20 }}>
-        {/* "START" label above dot — only shown when balance = start */}
-        {atStart && (
-          <div style={{
-            position: 'absolute', bottom: 14,
-            left: `${pct}%`, transform: 'translateX(-50%)',
-            fontSize: 9, fontWeight: 600, letterSpacing: '0.1em',
-            textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)',
-            whiteSpace: 'nowrap',
-          }}>
-            START
-          </div>
-        )}
-
-        {/* Track + dot */}
-        <div style={{ position: 'relative', height: 6 }}>
-          {/* Red segment — 0% → current */}
-          <div style={{
-            position: 'absolute', left: 0, top: 0, bottom: 0,
-            width: `${pct}%`,
-            background: '#f85149',
-            borderRadius: pct >= 100 ? 3 : '3px 0 0 3px',
-          }} />
-          {/* Green segment — current → 100% */}
-          <div style={{
-            position: 'absolute', right: 0, top: 0, bottom: 0,
-            width: `${100 - pct}%`,
-            background: '#3fb950',
-            borderRadius: pct <= 0 ? 3 : '0 3px 3px 0',
-          }} />
-          {/* White dot at current position */}
-          <div style={{
-            position: 'absolute',
-            top: '50%', left: `${pct}%`,
-            transform: 'translate(-50%, -50%)',
-            width: 8, height: 8,
-            borderRadius: '50%',
-            background: 'white',
-            boxShadow: '0 0 4px rgba(255,255,255,0.8)',
-            zIndex: 2,
-          }} />
-        </div>
-      </div>
-
-      {/* Labels row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        {/* MLL — left */}
-        <div>
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 13, fontWeight: 700, color: '#f85149' }}>
-            {fmt(mll, 0)}
-          </div>
-          <div style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>
-            MLL
-          </div>
-        </div>
-
-        {/* Balance + Remaining — center */}
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 13, fontWeight: 700, color: 'white' }}>
-            {fmt(current, 0)}
-          </div>
-          <div style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>
-            Balance
-          </div>
-          {remaining > 0 && (
-            <>
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.6)', marginTop: 8 }}>
-                {fmt(remaining, 0)}
-              </div>
-              <div style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>
-                Remaining
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Target — right */}
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 13, fontWeight: 700, color: '#3fb950' }}>
-            {fmt(target, 0)}
-          </div>
-          <div style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>
-            Target
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Small gradient progress bar (daily limit only) ───────────────────────────
+// Gradient progress bar
 const GRADIENTS = {
   ok:       'linear-gradient(90deg, #00d395, #00b8a9)',
   warning:  'linear-gradient(90deg, #f5a623, #f79433)',
@@ -151,13 +42,6 @@ export default function DashEval({ account, trades }) {
   const fmt = useMoney()
   const m = calcEvalMetrics(account, trades)
 
-  const startBalance = Number(account.start_balance)
-  const mll          = m.drawdown.floor
-  const target       = account.profit_target > 0
-    ? startBalance + Number(account.profit_target)
-    : null
-  const showPositionBar = mll != null && target != null
-
   const alerts = []
   if (m.failed) alerts.push({ type: 'breach', msg: 'ACCOUNT FAILED — Drawdown floor was hit.' })
   else if (m.drawdown.warningLevel === 'critical') alerts.push({ type: 'critical', msg: `Drawdown critical — ${fmt(m.drawdown.buffer)} remaining` })
@@ -191,18 +75,7 @@ export default function DashEval({ account, trades }) {
 
       {alerts.length > 0 && <div className="space-y-2">{alerts.map((a, i) => <WarnBanner key={i} message={a.msg} type={a.type} />)}</div>}
 
-      {/* MLL → TARGET position bar */}
-      {showPositionBar && (
-        <BalancePositionBar
-          mll={mll}
-          target={target}
-          current={m.currentBalance}
-          startBalance={startBalance}
-          fmt={fmt}
-        />
-      )}
-
-      {/* Key stats — DD Buffer no longer has mini progress bar (replaced by position bar above) */}
+      {/* Key stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="card p-4">
           <span className="stat-label">Balance</span>
@@ -228,8 +101,8 @@ export default function DashEval({ account, trades }) {
           <div className={`stat-value ${m.drawdown.breached ? 'pnl-neg' : 'text-white'}`}>
             {fmt(Math.max(0, m.drawdown.buffer), 0)}
           </div>
-          <div className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.25)' }}>
-            {m.drawdown.bufferPercent.toFixed(1)}% remaining
+          <div className="mt-2">
+            <ProgressBar percent={m.drawdown.bufferPercent} warningLevel={m.drawdown.warningLevel} />
           </div>
         </div>
 
@@ -276,7 +149,7 @@ export default function DashEval({ account, trades }) {
               <span className="text-2xl font-bold font-mono text-white">{m.tradingDays}</span>
               <span className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>/ {m.minDays} days</span>
             </div>
-            <ProgressBar percent={m.tradingDaysProgress} warningLevel="ok" />
+            <ProgressBar percent={m.tradingDaysProgress} warningLevel={m.tradingDays >= m.minDays ? 'ok' : 'ok'} />
             <p className="text-xs mt-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
               {m.tradingDays >= m.minDays ? 'Minimum met ✓' : `${m.minDays - m.tradingDays} more day${m.minDays - m.tradingDays !== 1 ? 's' : ''} required`}
             </p>
@@ -318,7 +191,7 @@ export default function DashEval({ account, trades }) {
             {m.drawdown.hwm && <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>HWM: <span className="font-mono text-white">{fmt(m.drawdown.hwm, 0)}</span></span>}
           </div>
           <div className="p-4 pb-2">
-            <EquityCurveChart curve={m.equityCurve} startBalance={startBalance} floor={m.drawdown.floor} />
+            <EquityCurveChart curve={m.equityCurve} startBalance={Number(account.start_balance)} floor={m.drawdown.floor} />
           </div>
         </div>
 
