@@ -33,111 +33,35 @@ export default function Sidebar({ onClose }) {
     <>
       <aside
         className="sidebar flex flex-col h-full"
-        style={{ width: 240 }}
+        style={{ width: 210, background: '#0d0f14', borderRight: '1px solid #21262d' }}
       >
         {/* Logo */}
-        <div className="px-4 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <div className="flex items-center gap-2.5">
-            <div style={{
-              width: 32, height: 32,
-              background: 'rgba(0,211,149,0.12)',
-              border: '1px solid rgba(0,211,149,0.25)',
-              borderRadius: 10,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <TrendingUp style={{ width: 16, height: 16, color: '#00d395' }} />
-            </div>
-            <span style={{ fontWeight: 700, fontSize: 18, color: 'white', letterSpacing: '-0.01em' }}>
+        <div className="px-4 py-5" style={{ borderBottom: '1px solid #21262d' }}>
+          <div className="flex items-center gap-2">
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#3fb950' }} />
+            <span style={{ fontWeight: 700, fontSize: 15, color: '#ffffff' }}>
               TradeFloor
             </span>
           </div>
-        </div>
-
-        {/* Account selector */}
-        <div className="px-3 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <button
-            onClick={() => setShowAccountMenu(v => !v)}
-            className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl transition-all duration-200"
-            style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
-            }}
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <div style={{
-                width: 26, height: 26,
-                background: 'rgba(0,211,149,0.15)',
-                borderRadius: 8,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#00d395' }}>
-                  {selectedAccount?.name?.charAt(0) || '?'}
-                </span>
-              </div>
-              <div className="min-w-0 text-left">
-                <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)' }} className="truncate">
-                  {selectedAccount?.name || 'Select Account'}
-                </p>
-                {selectedAccount && (
-                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
-                    {formatCurrency(selectedAccount.start_balance, 0)}
-                  </p>
-                )}
-              </div>
-            </div>
-            <ChevronDown style={{
-              width: 14, height: 14,
-              color: 'rgba(255,255,255,0.3)',
-              flexShrink: 0,
-              transform: showAccountMenu ? 'rotate(180deg)' : 'none',
-              transition: 'transform 0.2s',
-            }} />
-          </button>
-
-          {showAccountMenu && (
-            <div className="mt-1.5 overflow-hidden animate-slide-in rounded-xl"
-              style={{ background: 'rgba(8,10,15,0.9)', border: '1px solid rgba(255,255,255,0.08)' }}
-            >
-              {accounts.map(acc => (
-                <button
-                  key={acc.id}
-                  onClick={() => { setSelectedAccount(acc); setShowAccountMenu(false); onClose?.() }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors"
-                  style={{ color: selectedAccount?.id === acc.id ? '#00d395' : 'rgba(255,255,255,0.6)' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  <div style={{
-                    width: 20, height: 20,
-                    background: 'rgba(0,211,149,0.15)',
-                    borderRadius: 6,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: '#00d395' }}>{acc.name.charAt(0)}</span>
-                  </div>
-                  <span className="truncate">{acc.name}</span>
-                  {selectedAccount?.id === acc.id && (
-                    <span className="ml-auto" style={{ width: 6, height: 6, borderRadius: '50%', background: '#00d395', display: 'inline-block' }} />
-                  )}
-                </button>
-              ))}
-              <button
-                onClick={() => { setShowNewAccount(true); setShowAccountMenu(false) }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors"
-                style={{ color: 'rgba(255,255,255,0.35)', borderTop: '1px solid rgba(255,255,255,0.06)' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; }}
-              >
-                <Plus style={{ width: 14, height: 14 }} />
-                <span>Add account</span>
-              </button>
+          {/* Account pill */}
+          {selectedAccount && (
+            <div style={{ 
+              marginTop: 8, 
+              display: 'inline-block',
+              fontSize: 11, 
+              color: '#8b949e', 
+              background: '#161b22', 
+              border: '1px solid #21262d', 
+              borderRadius: 5, 
+              padding: '3px 8px' 
+            }}>
+              {selectedAccount.name}
             </div>
           )}
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 py-3 overflow-y-auto">
           {NAV.map(({ to, icon: Icon, label, end }) => (
             <NavLink
               key={to}
@@ -152,41 +76,32 @@ export default function Sidebar({ onClose }) {
           ))}
         </nav>
 
-        {/* Bottom: settings + sign out */}
-        <div className="px-3 py-3 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          {selectedAccount && (
-            <button onClick={() => setShowSettings(true)} className="nav-link w-full">
-              <Settings style={{ width: 16, height: 16, flexShrink: 0 }} />
-              Account Settings
-            </button>
-          )}
-
-          <div className="flex items-center gap-2 px-3 py-2">
+        {/* Footer */}
+        <div className="px-4 py-3" style={{ borderTop: '1px solid #21262d' }}>
+          <div className="flex items-center gap-2 mb-2">
             <div style={{
               width: 28, height: 28,
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: '#161b22',
+              border: '1px solid #21262d',
               borderRadius: '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)',
+              fontSize: 11, fontWeight: 600, color: '#8b949e',
               flexShrink: 0,
             }}>
               {user?.email?.charAt(0).toUpperCase()}
             </div>
-            <span className="text-xs truncate flex-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            <span className="text-xs truncate flex-1" style={{ color: '#484f58' }}>
               {user?.email}
             </span>
-            <button
-              onClick={handleSignOut}
-              className="p-1.5 rounded-lg transition-all duration-150"
-              style={{ color: 'rgba(255,255,255,0.3)' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,71,87,0.1)'; e.currentTarget.style.color = '#ff4757'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.3)'; }}
-              title="Sign out"
-            >
-              <LogOut style={{ width: 14, height: 14 }} />
-            </button>
           </div>
+          <button
+            onClick={handleSignOut}
+            className="nav-link w-full"
+            style={{ minHeight: 'auto', padding: '6px 16px' }}
+          >
+            <LogOut style={{ width: 14, height: 14, flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: '#3fb950' }}>Sign out</span>
+          </button>
         </div>
       </aside>
 
