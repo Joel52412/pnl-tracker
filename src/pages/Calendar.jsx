@@ -265,9 +265,9 @@ export default function Calendar() {
                     background: weekHasTrades ? (cellBgColor(weekTotal, maxAbs) || 'transparent') : 'rgba(255,255,255,0.01)',
                   }}
                 >
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontWeight: 500 }}>Wk {wi + 1}</span>
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontWeight: 400 }}>Wk {wi + 1}</span>
                   {weekHasTrades && (
-                    <span className={`font-mono ${pnlTextClass(weekTotal)}`} style={{ fontSize: 13 }}>
+                    <span className={`font-mono ${pnlTextClass(weekTotal)}`} style={{ fontSize: 14, fontWeight: 500 }}>
                       {weekTotal >= 0 ? '+' : ''}{fmt(weekTotal, 0)}
                     </span>
                   )}
