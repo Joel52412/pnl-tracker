@@ -238,7 +238,7 @@ export default function Journal() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">Journal</h1>
+          <h1 className="text-xl text-white">Journal</h1>
           <p className="text-sm text-gray-500 mt-0.5">{journals.length} entries</p>
         </div>
         <button onClick={openNew} className="btn-primary flex items-center gap-2">

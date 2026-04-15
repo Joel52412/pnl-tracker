@@ -21,7 +21,7 @@ export default function DashSimple({ account, trades }) {
     <div className="p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">{account.name}</h1>
+          <h1 className="text-xl text-white">{account.name}</h1>
           <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>Simple Tracker</p>
         </div>
         <div className="flex items-center gap-2">

@@ -115,7 +115,7 @@ export default function Calendar() {
         <div>
           <div className="flex items-center gap-3">
             <button onClick={prevMonth} className="btn-ghost p-2"><ChevronLeft className="w-4 h-4" /></button>
-            <h1 className="text-xl font-bold text-white w-44">{format(viewDate, 'MMMM yyyy')}</h1>
+            <h1 className="text-xl text-white w-44">{format(viewDate, 'MMMM yyyy')}</h1>
             <button onClick={nextMonth} className="btn-ghost p-2"><ChevronRight className="w-4 h-4" /></button>
           </div>
           <div className="flex items-center gap-4 mt-1.5 pl-10 text-sm">
@@ -240,7 +240,7 @@ export default function Calendar() {
                           {/* PnL + trade count */}
                           {pnl !== undefined ? (
                             <div className="flex flex-col items-center justify-center" style={{ minHeight: 56, position: 'relative', zIndex: 1 }}>
-                              <span className={`font-bold font-mono leading-tight ${pnlTextClass(pnl)}`} style={{ fontSize: 17 }}>
+                              <span className={`font-mono leading-tight ${pnlTextClass(pnl)}`} style={{ fontSize: 17 }}>
                                 {pnl >= 0 ? '+' : ''}{fmt(pnl, 0)}
                               </span>
                               <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
@@ -267,7 +267,7 @@ export default function Calendar() {
                 >
                   <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontWeight: 500 }}>Wk {wi + 1}</span>
                   {weekHasTrades && (
-                    <span className={`font-bold font-mono leading-tight ${pnlTextClass(weekTotal)}`} style={{ fontSize: 13 }}>
+                    <span className={`font-mono leading-tight ${pnlTextClass(weekTotal)}`} style={{ fontSize: 13 }}>
                       {weekTotal >= 0 ? '+' : ''}{fmt(weekTotal, 0)}
                     </span>
                   )}

@@ -56,7 +56,7 @@ export default function DashEval({ account, trades }) {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-white">{account.name}</h1>
+            <h1 className="text-xl text-white">{account.name}</h1>
             {m.passed && <span className="badge badge-green">PASSED ✓</span>}
             {m.failed && <span className="badge badge-red">FAILED ✗</span>}
             {!m.passed && !m.failed && <span className="badge badge-gray">IN PROGRESS</span>}
@@ -130,7 +130,7 @@ export default function DashEval({ account, trades }) {
               {m.profitProgress >= 100 && <CheckCircle2 style={{ width: 16, height: 16, color: '#00d395' }} className="ml-auto" />}
             </div>
             <div className="flex items-end justify-between mb-2">
-              <span className={`text-2xl font-bold font-mono ${pnlClass(m.profit)}`}>{fmt(m.profit)}</span>
+              <span className={`text-2xl font-mono ${pnlClass(m.profit)}`}>{fmt(m.profit)}</span>
               <span className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>/ {fmt(m.profitTarget, 0)}</span>
             </div>
             <ProgressBar percent={m.profitProgress} warningLevel="ok" />
@@ -146,7 +146,7 @@ export default function DashEval({ account, trades }) {
               {m.tradingDays >= m.minDays && <CheckCircle2 style={{ width: 16, height: 16, color: '#00d395' }} className="ml-auto" />}
             </div>
             <div className="flex items-end justify-between mb-2">
-              <span className="text-2xl font-bold font-mono text-white">{m.tradingDays}</span>
+              <span className="text-2xl font-mono text-white">{m.tradingDays}</span>
               <span className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>/ {m.minDays} days</span>
             </div>
             <ProgressBar percent={m.tradingDaysProgress} warningLevel={m.tradingDays >= m.minDays ? 'ok' : 'ok'} />

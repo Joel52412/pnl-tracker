@@ -56,7 +56,7 @@ export default function DashFunded({ account, trades, payouts }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">{account.name}</h1>
+          <h1 className="text-xl text-white">{account.name}</h1>
           <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>Funded Account</p>
         </div>
         <div className="flex items-center gap-2">
@@ -140,7 +140,7 @@ export default function DashFunded({ account, trades, payouts }) {
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className={`text-xl font-bold font-mono ${m.payout.met ? 'pnl-pos' : 'text-white'}`}>{m.payout.count}</span>
+                <span className={`text-xl font-mono ${m.payout.met ? 'pnl-pos' : 'text-white'}`}>{m.payout.count}</span>
                 <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>of {m.payout.required}</span>
               </div>
             </div>

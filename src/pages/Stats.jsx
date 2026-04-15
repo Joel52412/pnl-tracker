@@ -21,7 +21,7 @@ function StatCard({ label, value, sub, accent, icon: Icon }) {
           </div>
         )}
       </div>
-      <div className={`text-xl font-bold font-mono ${typeof value === 'string' && value.startsWith('-') ? 'text-red-400' : 'text-white'}`}>
+      <div className={`text-xl font-mono ${typeof value === 'string' && value.startsWith('-') ? 'text-red-400' : 'text-white'}`}>
         {value}
       </div>
       {sub && <div className="text-xs text-gray-600 mt-1">{sub}</div>}
@@ -150,7 +150,7 @@ export default function Stats() {
   return (
     <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
       <div>
-        <h1 className="text-xl font-bold text-white">Statistics</h1>
+        <h1 className="text-xl text-white">Statistics</h1>
         <p className="text-sm text-gray-500 mt-0.5">Based on {s.totalTrades} trades</p>
       </div>
 

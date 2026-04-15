@@ -54,7 +54,7 @@ export default function Register() {
           <div className="inline-flex items-center justify-center w-12 h-12 bg-brand/10 border border-brand/20 rounded-xl mb-4">
             <TrendingUp className="w-6 h-6 text-brand" />
           </div>
-          <h1 className="text-2xl font-bold text-white">TradeFloor</h1>
+          <h1 className="text-2xl text-white">TradeFloor</h1>
           <p className="text-sm text-gray-500 mt-1">Prop firm dashboard</p>
         </div>
 

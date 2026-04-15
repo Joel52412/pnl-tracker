@@ -163,7 +163,7 @@
   /* ── Stat typography with tabular figures ─────────────────────── */
   .stat-value {
     font-size: 32px;
-    font-weight: 700;
+    font-weight: 400;
     font-family: 'JetBrains Mono', monospace;
     font-variant-numeric: tabular-nums;
     line-height: 1.1;
