@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Load Inter and Roboto Mono from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400&display=swap');
+
 @layer base {
   * { box-sizing: border-box; }
   
@@ -164,7 +167,7 @@
   .stat-value {
     font-size: 32px;
     font-weight: 400;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Roboto Mono', monospace;
     font-variant-numeric: tabular-nums;
     line-height: 1.1;
     color: #ffffff;
