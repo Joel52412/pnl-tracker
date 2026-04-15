@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Load Inter and Roboto Mono from Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400&display=swap');
+/* Load Inter from Google Fonts - System Mono for numbers (no dotted zeros) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
 @layer base {
   * { box-sizing: border-box; }
@@ -52,7 +52,7 @@
 
   /* ── Inputs ─────────────────────────────────────────────────── */
   .input {
-    @apply w-full text-sm text-white font-mono;
+    @apply w-full text-sm text-white;
     background: #0D1117;
     border: 1px solid #30363D;
     border-radius: 0;
@@ -80,7 +80,7 @@
   .btn-primary {
     background: #238636;
     color: #ffffff;
-    font-weight: 600;
+    font-weight: 500;
     font-size: 13px;
     border: 1px solid #2EA043;
     border-radius: 0;
@@ -163,11 +163,11 @@
     color: #8B949E;
   }
 
-  /* ── Stat typography with tabular figures ─────────────────────── */
+  /* ── Stat typography with tabular figures - SYSTEM MONO (no dotted zeros) ─────────────────────── */
   .stat-value {
     font-size: 32px;
-    font-weight: 400;
-    font-family: 'Roboto Mono', monospace;
+    font-weight: 400 !important;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
     font-variant-numeric: tabular-nums;
     line-height: 1.1;
     color: #ffffff;
@@ -196,7 +196,7 @@
     padding: 2px 6px;
     border-radius: 0;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 500;
     white-space: nowrap;
     transition: none;
   }
@@ -299,7 +299,7 @@ tbody tr:hover {
 }
 
 /* ── Chart.js canvas border-radius ────────────────────────────────── */
-canvas { border-radius: 8px; }
+canvas { border-radius: 0; }
 
 /* ── Remove number input spinners ──────────────────────────────────── */
 input[type="number"]::-webkit-inner-spin-button,
