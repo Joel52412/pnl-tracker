@@ -22,23 +22,46 @@ export default function EquityCurveChart({ curve, startBalance, floor }) {
   const data = allPoints.map(p => p.balance)
 
   const floorLine = floor !== undefined ? allPoints.map(() => floor) : null
+  const startingBalanceLine = allPoints.map(() => startBalance)
 
   const isPositive = data[data.length - 1] >= startBalance
-  const lineColor = isPositive ? '#00d395' : '#ff4d4d'
+  const lineColor = '#3fb950'
+
+  // Create gradient fill
+  const gradientColor = isPositive 
+    ? 'rgba(63,185,80,0.15)' 
+    : 'rgba(248,81,73,0.15)'
 
   const datasets = [
     {
       label: 'Balance',
       data,
       borderColor: lineColor,
-      backgroundColor: 'transparent',
-      borderWidth: 2,
-      fill: false,
+      backgroundColor: (ctx) => {
+        const chartCtx = ctx.chart.ctx
+        const gradient = chartCtx.createLinearGradient(0, 0, 0, ctx.chart.height)
+        gradient.addColorStop(0, gradientColor)
+        gradient.addColorStop(1, 'transparent')
+        return gradient
+      },
+      borderWidth: 1.5,
+      fill: true,
       tension: 0.3,
       pointRadius: data.length > 30 ? 0 : 3,
       pointHoverRadius: 5,
       pointBackgroundColor: lineColor,
       pointBorderColor: 'transparent',
+    },
+    {
+      label: 'Starting Balance',
+      data: startingBalanceLine,
+      borderColor: 'rgba(255,255,255,0.3)',
+      borderWidth: 1,
+      borderDash: [4, 3],
+      fill: false,
+      tension: 0,
+      pointRadius: 0,
+      pointHoverRadius: 0,
     },
   ]
 
@@ -46,7 +69,7 @@ export default function EquityCurveChart({ curve, startBalance, floor }) {
     datasets.push({
       label: 'Drawdown Floor',
       data: floorLine,
-      borderColor: 'rgba(255,77,77,0.45)',
+      borderColor: 'rgba(248,81,73,0.45)',
       borderWidth: 1,
       borderDash: [4, 3],
       fill: false,
@@ -63,15 +86,16 @@ export default function EquityCurveChart({ curve, startBalance, floor }) {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#111318',
-        borderColor: '#2a2d36',
+        backgroundColor: '#161b22',
+        borderColor: '#30363d',
         borderWidth: 1,
-        titleColor: '#9ca3af',
-        bodyColor: '#f3f4f6',
+        titleColor: '#8b949e',
+        bodyColor: '#e6edf3',
         padding: 10,
         callbacks: {
           label: ctx => {
             if (ctx.dataset.label === 'Drawdown Floor') return `Floor: $${ctx.raw.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+            if (ctx.dataset.label === 'Starting Balance') return `Start: $${ctx.raw.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
             return `Balance: $${ctx.raw.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
           },
         },
@@ -79,20 +103,20 @@ export default function EquityCurveChart({ curve, startBalance, floor }) {
     },
     scales: {
       x: {
-        grid: { color: 'rgba(255,255,255,0.04)' },
+        grid: { color: '#21262d' },
         ticks: {
-          color: '#6b7280',
-          font: { size: 11 },
+          color: '#484f58',
+          font: { size: 10 },
           maxTicksLimit: 8,
           maxRotation: 0,
         },
         border: { color: 'transparent' },
       },
       y: {
-        grid: { color: 'rgba(255,255,255,0.04)' },
+        grid: { color: '#21262d' },
         ticks: {
-          color: '#6b7280',
-          font: { size: 11 },
+          color: '#484f58',
+          font: { size: 10 },
           callback: v => `$${(v / 1000).toFixed(0)}k`,
         },
         border: { color: 'transparent' },
@@ -101,7 +125,7 @@ export default function EquityCurveChart({ curve, startBalance, floor }) {
   }
 
   return (
-    <div style={{ height: 210 }}>
+    <div style={{ height: 90 }}>
       <Line data={{ labels, datasets }} options={options} />
     </div>
   )
