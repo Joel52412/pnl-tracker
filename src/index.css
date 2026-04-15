@@ -17,12 +17,15 @@
     font-weight: 400;
   }
 
-  /* FORCE SOLID ZEROS - System Monospace Stack with explicit zero feature disable */
-  .stat-value, .pnl-pos, .pnl-neg, .pnl-zero, .balance-value, .trade-count, .day-number, .week-total, .font-mono, [class*="mono"] {
-    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  /* FORCE SOLID ZEROS - Pure System Monospace with ZERO feature explicitly disabled */
+  .stat-value, .pnl-pos, .pnl-neg, .pnl-zero, .balance-value, .trade-count, .day-number, .week-total, .font-mono, [class*="mono"], 
+  .metric-value, .pnl-value, .trade-price, .trade-pnl, .weekly-pnl, .day-pnl {
+    font-family: "Consolas", "Monaco", "Menlo", monospace !important;
     font-weight: 400 !important;
-    font-variant-numeric: tabular-nums lining-nums;
-    font-feature-settings: "zero" 0, "ss01" 0, "ss02" 0, "cv01" 0, "cv02" 0, "dlig" 0 !important;
+    font-style: normal !important;
+    font-variant-numeric: normal !important;
+    font-feature-settings: "zero" 0, "ss01" 0, "ss02" 0, "cv01" 0, "cv02" 0, "dlig" 0, "liga" 0 !important;
+    text-rendering: geometricPrecision !important;
     letter-spacing: 0 !important;
     line-height: 1.2 !important;
   }
