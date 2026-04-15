@@ -1,32 +1,90 @@
+```
 # Dependencies
 node_modules/
 
-# Build output
+# Build artifacts
 dist/
+build/
+target/
 
-# Environment variables
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.ENV/
+.ENV.*
 .env
-.env.local
-.env.*.local
+.env.*
+.python-version
+.pytest_cache/
+.mypy_cache/
+.coverage
+coverage/
 
-# Editor
+# Logs
+*.log
+
+# Environment specific
+.env.local
+.env.*
+
+# IDE
 .vscode/
 .idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
+*.swp
+*.swo
+*~
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Compiled and binary
+*.class
+*.o
+*.so
+*.dll
+*.exe
+*.out
+*.a
+*.obj
 
-# Claude Code local settings
-.claude/settings.local.json
+# Compressed
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
 
-.vercel
+# Testing
+coverage/
+htmlcov/
+
+# Gradle
+.gradle/
+
+# Temporary files
+*.tmp
+```
