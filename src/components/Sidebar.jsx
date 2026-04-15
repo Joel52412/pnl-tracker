@@ -152,7 +152,7 @@ export default function Sidebar({ onClose }) {
           ))}
         </nav>
 
-        {/* Bottom: settings + sign out */}
+        {/* Bottom: user info + sign out */}
         <div className="px-3 py-3 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           {selectedAccount && (
             <button onClick={() => setShowSettings(true)} className="nav-link w-full">
@@ -161,31 +161,44 @@ export default function Sidebar({ onClose }) {
             </button>
           )}
 
-          <div className="flex items-center gap-2 px-3 py-2">
+          {/* User profile section - clickable for account management */}
+          <div
+            className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors group"
+            style={{ background: 'rgba(255,255,255,0.02)' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+            onClick={() => setShowSettings(true)}
+            title="Click to manage accounts or close profile"
+          >
             <div style={{
               width: 28, height: 28,
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'rgba(59,130,246,0.15)',
+              border: '1px solid rgba(59,130,246,0.3)',
               borderRadius: '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)',
+              fontSize: 11, fontWeight: 600, color: '#60a5fa',
               flexShrink: 0,
             }}>
               {user?.email?.charAt(0).toUpperCase()}
             </div>
-            <span className="text-xs truncate flex-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            <span className="text-xs truncate flex-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
               {user?.email}
             </span>
-            <button
-              onClick={handleSignOut}
-              className="p-1.5 rounded-lg transition-all duration-150"
-              style={{ color: 'rgba(255,255,255,0.3)' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,71,87,0.1)'; e.currentTarget.style.color = '#ff4757'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.3)'; }}
-              title="Sign out"
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              color: 'rgba(255,255,255,0.3)',
+              transition: 'color 0.15s',
+            }}
             >
-              <LogOut style={{ width: 14, height: 14 }} />
-            </button>
+              <Settings style={{ width: 12, height: 12 }} />
+              <LogOut
+                onClick={(e) => { e.stopPropagation(); handleSignOut(); }}
+                style={{ width: 14, height: 14 }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#ff4757'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.3)'; }}
+                title="Sign out"
+              />
+            </div>
           </div>
         </div>
       </aside>
@@ -194,8 +207,8 @@ export default function Sidebar({ onClose }) {
         <AccountSetup onClose={() => setShowNewAccount(false)} />,
         document.body
       )}
-      {showSettings && selectedAccount && createPortal(
-        <AccountSetup account={selectedAccount} onClose={() => setShowSettings(false)} />,
+      {showSettings && createPortal(
+        <AccountSetup account={selectedAccount || null} onClose={() => setShowSettings(false)} isFirstSetup={!selectedAccount} />,
         document.body
       )}
     </>
