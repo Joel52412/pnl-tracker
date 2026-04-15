@@ -30,7 +30,7 @@ function WarnBanner({ message, type }) {
     breach:   { background: 'rgba(255,71,87,0.12)', border: '1px solid rgba(255,71,87,0.4)', color: '#ff4757' },
   }
   return (
-    <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold" style={styles[type]}>
+    <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm" style={styles[type]}>
       <AlertTriangle className="w-4 h-4 shrink-0" />{message}
     </div>
   )
@@ -126,7 +126,7 @@ export default function DashEval({ account, trades }) {
           <div className="card p-5">
             <div className="flex items-center gap-2 mb-4">
               <Target style={{ width: 16, height: 16, color: '#00d395' }} />
-              <span className="text-sm font-semibold text-white">Profit Target</span>
+              <span className="text-sm text-white">Profit Target</span>
               {m.profitProgress >= 100 && <CheckCircle2 style={{ width: 16, height: 16, color: '#00d395' }} className="ml-auto" />}
             </div>
             <div className="flex items-end justify-between mb-2">
@@ -142,7 +142,7 @@ export default function DashEval({ account, trades }) {
           <div className="card p-5">
             <div className="flex items-center gap-2 mb-4">
               <Calendar style={{ width: 16, height: 16, color: '#60a5fa' }} />
-              <span className="text-sm font-semibold text-white">Trading Days</span>
+              <span className="text-sm text-white">Trading Days</span>
               {m.tradingDays >= m.minDays && <CheckCircle2 style={{ width: 16, height: 16, color: '#00d395' }} className="ml-auto" />}
             </div>
             <div className="flex items-end justify-between mb-2">
@@ -162,7 +162,7 @@ export default function DashEval({ account, trades }) {
               {m.consistency.breached
                 ? <XCircle style={{ width: 16, height: 16, color: '#ff4757' }} />
                 : <CheckCircle2 style={{ width: 16, height: 16, color: '#00d395' }} />}
-              <span className="text-sm font-semibold text-white">Consistency Rule</span>
+              <span className="text-sm text-white">Consistency Rule</span>
               <span className={`badge ml-auto text-xs ${m.consistency.breached ? 'badge-red' : m.consistency.warningLevel === 'warning' ? 'badge-amber' : 'badge-green'}`}>
                 {m.consistency.limit}% limit
               </span>
@@ -187,7 +187,7 @@ export default function DashEval({ account, trades }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="card">
           <div className="card-header flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">Equity Curve</h2>
+            <h2 className="text-sm text-white">Equity Curve</h2>
             {m.drawdown.hwm && <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>HWM: <span className="font-mono text-white">{fmt(m.drawdown.hwm, 0)}</span></span>}
           </div>
           <div className="p-4 pb-2">
@@ -197,7 +197,7 @@ export default function DashEval({ account, trades }) {
 
         <div className="card">
           <div className="card-header flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">Recent Trades</h2>
+            <h2 className="text-sm text-white">Recent Trades</h2>
             <a href="/trades" style={{ fontSize: 12, color: '#00d395' }}>View all →</a>
           </div>
           {m.recentTrades.length === 0 ? (
@@ -217,7 +217,7 @@ export default function DashEval({ account, trades }) {
                   {m.recentTrades.map(t => (
                     <tr key={t.id}>
                       <td className="px-4 py-2.5 font-mono text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>{formatDate(t.date)}</td>
-                      <td className={`px-4 py-2.5 text-right font-mono font-semibold ${pnlClass(t.pnl)}`}>{fmt(Number(t.pnl))}</td>
+                      <td className={`px-4 py-2.5 text-right font-mono ${pnlClass(t.pnl)}`}>{fmt(Number(t.pnl))}</td>
                       <td className="px-4 py-2.5 hidden sm:table-cell">{t.instrument ? <span className="badge badge-blue">{t.instrument}</span> : <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>}</td>
                     </tr>
                   ))}

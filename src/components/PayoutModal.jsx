@@ -41,7 +41,7 @@ export default function PayoutModal({ account, onClose }) {
               <Trophy className="w-4 h-4 text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-white">Request Payout</h2>
+              <h2 className="text-sm text-white">Request Payout</h2>
               <p className="text-xs text-gray-500">{formatCurrency(min)} – {formatCurrency(max)}</p>
             </div>
           </div>

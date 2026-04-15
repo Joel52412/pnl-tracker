@@ -36,7 +36,7 @@ export default function Register() {
           <div className="inline-flex items-center justify-center w-14 h-14 bg-emerald-500/10 border border-emerald-500/20 rounded-full mb-4">
             <CheckCircle className="w-7 h-7 text-emerald-400" />
           </div>
-          <h2 className="text-xl font-semibold text-white mb-2">Check your email</h2>
+          <h2 className="text-xl text-white mb-2">Check your email</h2>
           <p className="text-gray-400 text-sm mb-6">
             We sent a confirmation link to <span className="text-white">{email}</span>.
             Click it to activate your account.
@@ -59,7 +59,7 @@ export default function Register() {
         </div>
 
         <div className="card p-6">
-          <h2 className="text-lg font-semibold text-white mb-6">Create an account</h2>
+          <h2 className="text-lg text-white mb-6">Create an account</h2>
 
           {error && (
             <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg px-4 py-3 mb-4">

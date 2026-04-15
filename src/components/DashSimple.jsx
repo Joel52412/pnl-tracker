@@ -70,7 +70,7 @@ export default function DashSimple({ account, trades }) {
 
       {/* Equity curve */}
       <div className="card">
-        <div className="card-header"><h2 className="text-sm font-semibold text-white">Equity Curve</h2></div>
+        <div className="card-header"><h2 className="text-sm text-white">Equity Curve</h2></div>
         <div className="p-4 pb-2">
           <EquityCurveChart curve={m.equityCurve} startBalance={Number(account.start_balance)} />
         </div>
@@ -79,7 +79,7 @@ export default function DashSimple({ account, trades }) {
       {/* Recent trades */}
       <div className="card">
         <div className="card-header flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-white">Recent Trades</h2>
+          <h2 className="text-sm text-white">Recent Trades</h2>
           <a href="/trades" style={{ fontSize: 12, color: '#00d395' }}>View all →</a>
         </div>
         {m.recentTrades.length === 0 ? (
@@ -100,7 +100,7 @@ export default function DashSimple({ account, trades }) {
                 {m.recentTrades.map(t => (
                   <tr key={t.id}>
                     <td className="px-5 py-3 font-mono text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>{formatDate(t.date)}</td>
-                    <td className={`px-5 py-3 text-right font-mono font-semibold ${pnlClass(t.pnl)}`}>{fmt(Number(t.pnl))}</td>
+                    <td className={`px-5 py-3 text-right font-mono ${pnlClass(t.pnl)}`}>{fmt(Number(t.pnl))}</td>
                     <td className="px-5 py-3 hidden sm:table-cell">{t.instrument ? <span className="badge badge-blue">{t.instrument}</span> : <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>}</td>
                     <td className="px-5 py-3 hidden md:table-cell">{t.session ? <span className="badge badge-gray">{t.session}</span> : <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>}</td>
                   </tr>

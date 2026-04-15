@@ -208,7 +208,7 @@ export default function Stats() {
       {sortedDates.length > 0 && (
         <div className="card">
           <div className="card-header">
-            <h2 className="text-sm font-semibold text-white">Daily PnL — Last 30 Days</h2>
+            <h2 className="text-sm text-white">Daily PnL — Last 30 Days</h2>
           </div>
           <div className="p-4" style={{ height: 220 }}>
             <Bar data={barData} options={barOptions} />
@@ -222,7 +222,7 @@ export default function Stats() {
         {doughnutData && (
           <div className="card">
             <div className="card-header">
-              <h2 className="text-sm font-semibold text-white">Sessions</h2>
+              <h2 className="text-sm text-white">Sessions</h2>
             </div>
             <div className="p-4" style={{ height: 220 }}>
               <Doughnut data={doughnutData} options={doughnutOptions} />
@@ -248,7 +248,7 @@ export default function Stats() {
         {instrBarData && (
           <div className="card">
             <div className="card-header">
-              <h2 className="text-sm font-semibold text-white">Instruments</h2>
+              <h2 className="text-sm text-white">Instruments</h2>
             </div>
             <div className="p-4" style={{ height: 220 }}>
               <Bar data={instrBarData} options={{

@@ -106,7 +106,7 @@ export default function InstrumentSelector({ value, onChange }) {
 
         {filtered.map(({ cat, items }) => (
           <div key={cat}>
-            <div className="px-3 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-surface-900/80 sticky top-0">
+            <div className="px-3 py-1.5 text-xs text-gray-500 uppercase tracking-wider bg-surface-900/80 sticky top-0">
               {cat}
             </div>
             <div className="grid grid-cols-2">
@@ -117,7 +117,7 @@ export default function InstrumentSelector({ value, onChange }) {
                   onMouseDown={e => { e.preventDefault(); select(item) }}
                   onTouchEnd={e => { e.preventDefault(); select(item) }}
                   className={`px-3 py-2 text-left text-sm transition-colors hover:bg-surface-700 font-mono
-                    ${item === value ? 'text-brand font-semibold' : 'text-gray-300'}`}
+                    ${item === value ? 'text-brand' : 'text-gray-300'}`}
                 >
                   {item}
                 </button>

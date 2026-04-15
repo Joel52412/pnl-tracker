@@ -18,7 +18,7 @@ function MindsetRating({ value, onChange }) {
           key={n}
           type="button"
           onClick={() => onChange(value === n ? null : n)}
-          className={`w-7 h-7 rounded-full border-2 transition-all text-xs font-bold
+          className={`w-7 h-7 rounded-full border-2 transition-all text-xs
             ${n <= (value || 0)
               ? 'bg-brand border-brand text-white'
               : 'bg-transparent border-surface-600 text-gray-600 hover:border-brand/50'}`}
@@ -81,12 +81,12 @@ function JournalForm({ entry, dateStr, accountId, userId, onSaved, onClose, dayP
           <div>
             <div className="flex items-center gap-2">
               <BookText className="w-4 h-4 text-blue-400" />
-              <h2 className="text-base font-semibold text-white">
+              <h2 className="text-base text-white">
                 {format(new Date(dateStr + 'T12:00:00'), 'EEEE, MMMM d, yyyy')}
               </h2>
             </div>
             {dayPnL !== undefined && (
-              <span className={`text-xs font-mono font-semibold ml-6 ${pnlClass(dayPnL)}`}>
+              <span className={`text-xs font-mono ml-6 ${pnlClass(dayPnL)}`}>
                 {dayPnL >= 0 ? '+' : ''}{fmt(dayPnL)} on this day
               </span>
             )}
@@ -300,11 +300,11 @@ export default function Journal() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-semibold text-white">
+                        <span className="text-sm text-white">
                           {format(new Date(j.date + 'T12:00:00'), 'EEE, MMM d, yyyy')}
                         </span>
                         {dayPnL !== undefined && (
-                          <span className={`text-xs font-mono font-semibold ${pnlClass(dayPnL)}`}>
+                          <span className={`text-xs font-mono ${pnlClass(dayPnL)}`}>
                             {dayPnL >= 0 ? '+' : ''}{fmt(dayPnL)}
                           </span>
                         )}

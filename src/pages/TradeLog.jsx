@@ -92,7 +92,7 @@ export default function TradeLog() {
             <div className="text-xs text-gray-500 mt-0.5">Trades</div>
           </div>
           <div className="card p-3 text-center">
-            <div className={`text-lg font-bold ${Number(winRate) >= 50 ? 'text-emerald-400' : 'text-red-400'}`}>{winRate}%</div>
+            <div className={`text-lg ${Number(winRate) >= 50 ? 'text-emerald-400' : 'text-red-400'}`}>{winRate}%</div>
             <div className="text-xs text-gray-500 mt-0.5">Win Rate</div>
           </div>
         </div>
@@ -172,7 +172,7 @@ export default function TradeLog() {
                       {formatDate(trade.date)}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <span className={`font-mono font-semibold ${pnlClass(trade.pnl)}`}>
+                      <span className={`font-mono ${pnlClass(trade.pnl)}`}>
                         {formatCurrency(Number(trade.pnl))}
                       </span>
                     </td>

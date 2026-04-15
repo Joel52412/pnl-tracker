@@ -38,7 +38,7 @@ export default function Login() {
         </div>
 
         <div className="card p-6">
-          <h2 className="text-lg font-semibold text-white mb-6">Sign in to your account</h2>
+          <h2 className="text-lg text-white mb-6">Sign in to your account</h2>
 
           {error && (
             <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg px-4 py-3 mb-4">

@@ -119,7 +119,7 @@ export default function Calendar() {
             <button onClick={nextMonth} className="btn-ghost p-2"><ChevronRight className="w-4 h-4" /></button>
           </div>
           <div className="flex items-center gap-4 mt-1.5 pl-10 text-sm">
-            <span className={`font-mono font-semibold ${pnlClass(monthTotal)}`}>
+            <span className={`font-mono ${pnlClass(monthTotal)}`}>
               {monthTotal >= 0 ? '+' : ''}{fmt(monthTotal, 0)}
             </span>
             <span style={{ color: 'rgba(255,255,255,0.35)' }}>{tradingDays} day{tradingDays !== 1 ? 's' : ''} traded</span>
@@ -136,12 +136,12 @@ export default function Calendar() {
         {/* Column headers */}
         <div className="grid grid-cols-8" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           {DAY_HEADERS.map((d, i) => (
-            <div key={d} className="py-2.5 text-center text-xs font-semibold uppercase tracking-wider"
+            <div key={d} className="py-2.5 text-center text-xs uppercase tracking-wider"
               style={{ color: WEEKEND_COLS.has(i) ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.4)' }}>
               {d}
             </div>
           ))}
-          <div className="py-2.5 text-center text-xs font-semibold uppercase tracking-wider"
+          <div className="py-2.5 text-center text-xs uppercase tracking-wider"
             style={{ color: 'rgba(255,255,255,0.3)', borderLeft: '1px solid rgba(255,255,255,0.07)' }}>
             Week
           </div>
@@ -240,7 +240,7 @@ export default function Calendar() {
                           {/* PnL + trade count */}
                           {pnl !== undefined ? (
                             <div className="flex flex-col items-center justify-center" style={{ minHeight: 56, position: 'relative', zIndex: 1 }}>
-                              <span className={`font-mono leading-tight ${pnlTextClass(pnl)}`} style={{ fontSize: 17 }}>
+                              <span className={`font-mono ${pnlTextClass(pnl)}`} style={{ fontSize: 17 }}>
                                 {pnl >= 0 ? '+' : ''}{fmt(pnl, 0)}
                               </span>
                               <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
@@ -267,7 +267,7 @@ export default function Calendar() {
                 >
                   <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontWeight: 500 }}>Wk {wi + 1}</span>
                   {weekHasTrades && (
-                    <span className={`font-mono leading-tight ${pnlTextClass(weekTotal)}`} style={{ fontSize: 13 }}>
+                    <span className={`font-mono ${pnlTextClass(weekTotal)}`} style={{ fontSize: 13 }}>
                       {weekTotal >= 0 ? '+' : ''}{fmt(weekTotal, 0)}
                     </span>
                   )}
@@ -334,9 +334,9 @@ function DrillDown({ dateStr, trades, journal, pnl, fmt, onClose, onAddTrade }) 
     <div className="p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-semibold text-white">{displayDate}</h3>
+          <h3 className="text-sm text-white">{displayDate}</h3>
           {pnl !== undefined && (
-            <span className={`text-sm font-mono font-bold ${pnl >= 0 ? 'pnl-pos' : 'pnl-neg'}`}>
+            <span className={`text-sm font-mono ${pnl >= 0 ? 'pnl-pos' : 'pnl-neg'}`}>
               {pnl >= 0 ? '+' : ''}{fmt(pnl)}
             </span>
           )}
@@ -373,14 +373,14 @@ function DrillDown({ dateStr, trades, journal, pnl, fmt, onClose, onAddTrade }) 
                       {!t.instrument && !t.session && <span style={{ color: 'rgba(255,255,255,0.2)' }} className="text-xs">—</span>}
                     </div>
                   </div>
-                  <span className={`text-sm font-mono font-semibold ${Number(t.pnl) >= 0 ? 'pnl-pos' : 'pnl-neg'}`}>
+                  <span className={`text-sm font-mono ${Number(t.pnl) >= 0 ? 'pnl-pos' : 'pnl-neg'}`}>
                     {Number(t.pnl) >= 0 ? '+' : ''}{fmt(Number(t.pnl))}
                   </span>
                 </div>
               ))}
               {trades.length > 1 && (
                 <div className="flex justify-end pt-1">
-                  <span className={`text-xs font-mono font-semibold ${totalPnL >= 0 ? 'pnl-pos' : 'pnl-neg'}`}>
+                  <span className={`text-xs font-mono ${totalPnL >= 0 ? 'pnl-pos' : 'pnl-neg'}`}>
                     Total: {totalPnL >= 0 ? '+' : ''}{fmt(totalPnL)}
                   </span>
                 </div>

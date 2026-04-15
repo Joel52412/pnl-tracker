@@ -52,7 +52,7 @@ export default function AddTradeModal({ onClose, prefillDate }) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-surface-700">
           <div className="flex items-center gap-2">
             <Plus className="w-4 h-4 text-brand" />
-            <h2 className="text-base font-semibold text-white">Log Trade</h2>
+            <h2 className="text-base text-white">Log Trade</h2>
           </div>
           <button onClick={onClose} className="btn-ghost p-1.5"><X className="w-4 h-4" /></button>
         </div>

@@ -103,7 +103,7 @@ export default function AccountSetup({ account = null, onClose, onSaved, isFirst
               <Briefcase className="w-4 h-4 text-brand" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-white">
+              <h2 className="text-base text-white">
                 {isFirstSetup ? 'Welcome — Set Up Your Account' : isEdit ? 'Edit Account' : 'Add New Account'}
               </h2>
               <p className="text-xs text-gray-500">
@@ -123,7 +123,7 @@ export default function AccountSetup({ account = null, onClose, onSaved, isFirst
 
           {/* Account type selector */}
           <section>
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Account Type</h3>
+            <h3 className="text-xs text-gray-500 uppercase tracking-wider mb-3">Account Type</h3>
             <div className="grid grid-cols-1 gap-2">
               {ACCOUNT_TYPES.map(at => (
                 <label
@@ -153,7 +153,7 @@ export default function AccountSetup({ account = null, onClose, onSaved, isFirst
 
           {/* Account basics */}
           <section>
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Account Details</h3>
+            <h3 className="text-xs text-gray-500 uppercase tracking-wider mb-3">Account Details</h3>
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
                 <label className="input-label">Account Name</label>
@@ -169,7 +169,7 @@ export default function AccountSetup({ account = null, onClose, onSaved, isFirst
           {/* Drawdown rules — eval and funded */}
           {isPropFirm && (
             <section>
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Drawdown Rules</h3>
+              <h3 className="text-xs text-gray-500 uppercase tracking-wider mb-3">Drawdown Rules</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="input-label">Drawdown Type</label>
@@ -194,7 +194,7 @@ export default function AccountSetup({ account = null, onClose, onSaved, isFirst
           {/* Eval-specific rules */}
           {isEval && (
             <section>
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Evaluation Rules</h3>
+              <h3 className="text-xs text-gray-500 uppercase tracking-wider mb-3">Evaluation Rules</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="input-label">Profit Target ($)</label>
@@ -217,7 +217,7 @@ export default function AccountSetup({ account = null, onClose, onSaved, isFirst
           {/* Funded-specific rules */}
           {isFunded && (
             <section>
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Payout Rules</h3>
+              <h3 className="text-xs text-gray-500 uppercase tracking-wider mb-3">Payout Rules</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="input-label">Qualifying Days Needed</label>
@@ -268,7 +268,7 @@ export default function AccountSetup({ account = null, onClose, onSaved, isFirst
         {isEdit && !isFirstSetup && (
           <div className="px-6 pb-6">
             <div className="border-t border-surface-700 pt-5">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Danger Zone</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Danger Zone</p>
               {deleteError && (
                 <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg px-3 py-2.5 mb-3">
                   <AlertCircle className="w-4 h-4 shrink-0" />{deleteError}
@@ -303,7 +303,7 @@ export default function AccountSetup({ account = null, onClose, onSaved, isFirst
                   <div className="flex items-start gap-3">
                     <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold text-red-300">Delete "{account.name}"?</p>
+                      <p className="text-sm text-red-300">Delete "{account.name}"?</p>
                       <p className="text-xs text-gray-400 mt-1">Permanently deletes this account and all its trades. <span className="text-red-400 font-medium">Cannot be undone.</span></p>
                     </div>
                   </div>
@@ -321,7 +321,7 @@ export default function AccountSetup({ account = null, onClose, onSaved, isFirst
                   <div className="flex items-start gap-3">
                     <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold text-red-300">Close your entire profile?</p>
+                      <p className="text-sm text-red-300">Close your entire profile?</p>
                       <p className="text-xs text-gray-400 mt-1">Deletes your login, all {accounts.length} account{accounts.length !== 1 ? 's' : ''}, and every trade. <span className="text-red-400 font-medium">Cannot be undone.</span></p>
                     </div>
                   </div>
