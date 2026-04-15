@@ -1,10 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Load Inter from Google Fonts - System Mono for numbers (no dotted zeros) */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
+  
 @layer base {
   * { box-sizing: border-box; }
   
@@ -15,6 +14,17 @@
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-weight: 400;
+  }
+
+  /* FORCE SOLID ZEROS - System Monospace Stack with explicit zero feature disable */
+  .stat-value, .pnl-pos, .pnl-neg, .pnl-zero, .balance-value, .trade-count, .day-number, .week-total, .font-mono, [class*="mono"] {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+    font-weight: 400 !important;
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: "zero" 0, "ss01" 0, "ss02" 0, "cv01" 0, "cv02" 0, "dlig" 0 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.2 !important;
   }
 
   /* Simple flat scrollbar */
@@ -163,13 +173,14 @@
     color: #8B949E;
   }
 
-  /* ── Stat typography with tabular figures - SYSTEM MONO (no dotted zeros) ─────────────────────── */
+  /* ── Stat typography with tabular figures - SYSTEM MONO (solid zeros) ─────────────────────── */
   .stat-value {
     font-size: 32px;
     font-weight: 400 !important;
     font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
-    font-variant-numeric: tabular-nums;
-    line-height: 1.1;
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: "zero" 0, "ss01" 0, "ss02" 0, "cv01" 0, "cv02" 0, "dlig" 0 !important;
+    line-height: 1.2 !important;
     color: #ffffff;
   }
   .stat-label {
