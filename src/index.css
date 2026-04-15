@@ -6,64 +6,62 @@
   * { box-sizing: border-box; }
   
   body {
-    background: #0a0c10;
-    color: #e6edf3;
-    font-family: 'Inter', system-ui, sans-serif;
+    background: #0D1117;
+    color: #C9D1D9;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Premium 4px scrollbar */
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: #161b22; }
-  ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 999px; }
-  ::-webkit-scrollbar-thumb:hover { background: #3fb950; }
+  /* Simple flat scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #161B22; }
+  ::-webkit-scrollbar-thumb { background: #30363D; }
+  ::-webkit-scrollbar-thumb:hover { background: #484F58; }
 }
 
 @layer components {
 
-  /* ── Premium card with subtle gradient ─────────────────────────── */
+  /* ── Flat card, no decorations ─────────────────────────── */
   .card {
-    background: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
-    border: 1px solid #21262d;
-    border-radius: 14px;
-    box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset;
-    transition: all 0.08s cubic-bezier(0.4, 0, 0.2, 1), transform 0.08s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 0;
+    transition: none;
   }
   .card:hover {
-    border-color: #30363d;
+    border-color: #484F58;
   }
   .card:active {
-    transform: scale(0.99);
+    transform: none;
   }
   .card-header {
-    @apply px-5 py-4;
-    border-bottom: 1px solid #21262d;
+    @apply px-4 py-3;
+    border-bottom: 1px solid #30363D;
   }
 
-  /* ── Premium sidebar ──────────────────────────────────────────── */
+  /* ── Flat sidebar ──────────────────────────────────────────── */
   .sidebar {
-    background: #0a0c10;
-    border-right: 1px solid #21262d;
+    background: #0D1117;
+    border-right: 1px solid #30363D;
   }
 
   /* ── Inputs ─────────────────────────────────────────────────── */
   .input {
     @apply w-full text-sm text-white font-mono;
-    background: #0d1117;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    padding: 10px 14px;
+    background: #0D1117;
+    border: 1px solid #30363D;
+    border-radius: 0;
+    padding: 8px 12px;
     outline: none;
-    transition: all 0.08s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: none;
   }
-  .input::placeholder { color: #484f58; }
+  .input::placeholder { color: #484F58; }
   .input:focus {
-    border-color: #388bfd;
-    box-shadow: 0 0 0 3px rgba(56,139,253,0.15);
+    border-color: #58A6FF;
   }
-  .input option { background: #0d1117; color: white; }
+  .input option { background: #0D1117; color: white; }
 
   .input-label {
     display: block;
@@ -71,107 +69,103 @@
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #8b949e;
+    color: #8B949E;
     margin-bottom: 6px;
   }
 
-  /* ── Buttons with press effect ────────────────────────────────── */
+  /* ── Buttons, no effects ────────────────────────────────── */
   .btn-primary {
-    background: linear-gradient(135deg, #238636, #2ea043);
+    background: #238636;
     color: #ffffff;
     font-weight: 600;
     font-size: 13px;
-    border: 1px solid #2ea043;
-    border-radius: 8px;
-    padding: 9px 18px;
+    border: 1px solid #2EA043;
+    border-radius: 0;
+    padding: 8px 16px;
     cursor: pointer;
-    transition: all 0.08s cubic-bezier(0.4, 0, 0.2, 1), transform 0.08s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: none;
     display: inline-flex;
     align-items: center;
     gap: 8px;
     white-space: nowrap;
   }
   .btn-primary:hover:not(:disabled) {
-    background: linear-gradient(135deg, #2ea043, #3fb950);
-    transform: translateY(-1px);
+    background: #2EA043;
   }
   .btn-primary:active:not(:disabled) {
-    transform: scale(0.97) translateY(0);
+    opacity: 0.8;
   }
-  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .btn-secondary {
     background: transparent;
-    border: 1px solid #30363d;
-    color: #8b949e;
+    border: 1px solid #30363D;
+    color: #8B949E;
     font-weight: 500;
     font-size: 13px;
-    border-radius: 8px;
-    padding: 9px 18px;
+    border-radius: 0;
+    padding: 8px 16px;
     cursor: pointer;
-    transition: all 0.08s cubic-bezier(0.4, 0, 0.2, 1), transform 0.08s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: none;
     display: inline-flex;
     align-items: center;
     gap: 8px;
     white-space: nowrap;
   }
   .btn-secondary:hover {
-    border-color: #8b949e;
+    border-color: #8B949E;
     color: #ffffff;
-    transform: translateY(-1px);
   }
   .btn-secondary:active {
-    transform: scale(0.97) translateY(0);
+    opacity: 0.8;
   }
 
   .btn-danger {
-    background: rgba(248,81,73,0.1);
-    border: 1px solid rgba(248,81,73,0.3);
-    color: #f85149;
+    background: transparent;
+    border: 1px solid #DA3633;
+    color: #F85149;
     font-weight: 500;
     font-size: 13px;
-    border-radius: 8px;
-    padding: 9px 18px;
+    border-radius: 0;
+    padding: 8px 16px;
     cursor: pointer;
-    transition: all 0.08s cubic-bezier(0.4, 0, 0.2, 1), transform 0.08s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: none;
     display: inline-flex;
     align-items: center;
     gap: 8px;
   }
   .btn-danger:hover { 
-    background: rgba(248,81,73,0.15); 
-    transform: translateY(-1px);
+    background: rgba(248,81,73,0.1);
   }
   .btn-danger:active {
-    transform: scale(0.97) translateY(0);
+    opacity: 0.8;
   }
 
   .btn-ghost {
     background: transparent;
     border: none;
-    color: #484f58;
+    color: #484F58;
     font-weight: 500;
     font-size: 13px;
-    border-radius: 6px;
+    border-radius: 0;
     padding: 6px 10px;
     cursor: pointer;
-    transition: all 0.08s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: none;
     display: inline-flex;
     align-items: center;
     gap: 6px;
   }
   .btn-ghost:hover {
-    background: #161b22;
-    color: #8b949e;
+    background: #161B22;
+    color: #8B949E;
   }
 
   /* ── Stat typography with tabular figures ─────────────────────── */
   .stat-value {
-    font-size: 36px;
+    font-size: 32px;
     font-weight: 700;
     font-family: 'JetBrains Mono', monospace;
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
     line-height: 1.1;
     color: #ffffff;
   }
@@ -180,98 +174,96 @@
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #8b949e;
+    color: #8B949E;
   }
 
-  /* ── PnL colors with refined glow ─────────────────────────────── */
+  /* ── PnL colors, no glow ─────────────────────────────── */
   .pnl-pos {
-    color: #3fb950;
-    text-shadow: 0 0 12px rgba(63,185,80,0.3);
+    color: #3FB950;
   }
   .pnl-neg {
-    color: #f85149;
-    text-shadow: 0 0 12px rgba(248,81,73,0.3);
+    color: #F85149;
   }
-  .pnl-zero { color: #484f58; }
+  .pnl-zero { color: #484F58; }
 
-  /* ── Badges ──────────────────────────────────────────────────── */
+  /* ── Badges, flat ──────────────────────────────────────────────────── */
   .badge {
     display: inline-flex;
     align-items: center;
-    padding: 3px 8px;
-    border-radius: 6px;
+    padding: 2px 6px;
+    border-radius: 0;
     font-size: 11px;
     font-weight: 600;
     white-space: nowrap;
-    transition: all 0.08s ease;
+    transition: none;
   }
   .badge-green {
-    background: rgba(63,185,80,0.12);
-    color: #3fb950;
-    border: 1px solid rgba(63,185,80,0.25);
+    background: transparent;
+    color: #3FB950;
+    border: 1px solid #2EA043;
   }
   .badge-red {
-    background: rgba(248,81,73,0.12);
-    color: #f85149;
-    border: 1px solid rgba(248,81,73,0.25);
+    background: transparent;
+    color: #F85149;
+    border: 1px solid #DA3633;
   }
   .badge-amber {
-    background: rgba(210,153,34,0.12);
-    color: #d29922;
-    border: 1px solid rgba(210,153,34,0.25);
+    background: transparent;
+    color: #D29922;
+    border: 1px solid #9E6A03;
   }
   .badge-blue {
-    background: rgba(56,139,253,0.12);
-    color: #58a6ff;
-    border: 1px solid rgba(56,139,253,0.2);
+    background: transparent;
+    color: #58A6FF;
+    border: 1px solid #1F6FEB;
   }
   .badge-purple {
-    background: rgba(139,92,246,0.12);
-    color: #a78bfa;
-    border: 1px solid rgba(139,92,246,0.2);
+    background: transparent;
+    color: #A5A0FF;
+    border: 1px solid #3D37A8;
   }
 
-  /* ── Progress bars ───────────────────────────────────────────── */
+  /* ── Progress bars, flat ───────────────────────────────────────────── */
   .progress-bar-track {
     height: 4px;
-    border-radius: 2px;
-    background: #21262d;
+    border-radius: 0;
+    background: #30363D;
     overflow: hidden;
   }
 
-  /* ── Nav links ───────────────────────────────────────────────── */
+  /* ── Nav links, flat ───────────────────────────────────────────────── */
   .nav-link {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 9px 16px;
-    border-radius: 8px;
+    padding: 8px 16px;
+    border-radius: 0;
     font-size: 13px;
     font-weight: 500;
-    color: #8b949e;
-    transition: all 0.08s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #8B949E;
+    transition: none;
     cursor: pointer;
     text-decoration: none;
-    min-height: 44px;
+    min-height: 40px;
     width: 100%;
     border-left: 3px solid transparent;
   }
   .nav-link:hover {
-    background: #161b22;
-    color: #c9d1d9;
+    background: #161B22;
+    color: #C9D1D9;
   }
   .nav-link.active {
-    background: #161b22;
+    background: #161B22;
     color: #ffffff;
-    border-left-color: #3fb950;
+    border-left-color: #3FB950;
   }
 
-  /* ── Modal ───────────────────────────────────────────────────── */
+  /* ── Modal, flat ───────────────────────────────────────────────────── */
   .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -279,33 +271,16 @@
     padding: 16px;
   }
   .modal-panel {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 14px;
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 0;
     width: 100%;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
   }
 
-  /* ── Skeleton shimmer ────────────────────────────────────────── */
+  /* ── Skeleton flat ────────────────────────────────────────── */
   .skeleton {
-    @apply animate-skeleton rounded;
-    background: #21262d;
-  }
-  
-  /* ── Pulse animation for status indicators ───────────────────── */
-  @keyframes pulse-ring {
-    0% { transform: scale(0.8); opacity: 0.5; }
-    100% { transform: scale(2); opacity: 0; }
-  }
-  .pulse-dot {
-    position: relative;
-  }
-  .pulse-dot::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    animation: pulse-ring 1.5s ease-out infinite;
+    @apply animate-skeleton;
+    background: #21262D;
   }
 }
 

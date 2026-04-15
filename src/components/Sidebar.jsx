@@ -41,11 +41,11 @@ export default function Sidebar({ onClose }) {
         style={{ width: 210 }}
       >
         {/* Logo */}
-        <div className="px-4 py-4" style={{ borderBottom: '1px solid #21262d' }}>
+        <div className="px-4 py-4" style={{ borderBottom: '1px solid #30363D' }}>
           <div className="flex items-center gap-2">
             <div style={{
               width: 7, height: 7,
-              background: '#3fb950',
+              background: '#3FB950',
               borderRadius: '50%',
               flexShrink: 0,
             }} />
@@ -56,13 +56,13 @@ export default function Sidebar({ onClose }) {
         </div>
 
         {/* Account selector */}
-        <div className="px-3 py-3" style={{ borderBottom: '1px solid #21262d' }}>
+        <div className="px-3 py-3" style={{ borderBottom: '1px solid #30363D' }}>
           <button
             onClick={() => setShowAccountMenu(v => !v)}
-            className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-md transition-all"
+            className="w-full flex items-center justify-between gap-2 px-2.5 py-2"
             style={{
-              background: '#161b22',
-              border: '1px solid #21262d',
+              background: '#161B22',
+              border: '1px solid #30363D',
             }}
           >
             <div className="flex items-center gap-2 min-w-0">
@@ -93,43 +93,41 @@ export default function Sidebar({ onClose }) {
               color: '#484f58',
               flexShrink: 0,
               transform: showAccountMenu ? 'rotate(180deg)' : 'none',
-              transition: 'transform 0.12s ease',
             }} />
           </button>
 
           {showAccountMenu && (
-            <div className="mt-1 overflow-hidden rounded-md"
-              style={{ background: '#161b22', border: '1px solid #21262d' }}
+            <div className="mt-1 overflow-hidden"
+              style={{ background: '#161B22', border: '1px solid #30363D' }}
             >
               {accounts.map(acc => (
                 <button
                   key={acc.id}
                   onClick={() => { setSelectedAccount(acc); setShowAccountMenu(false); onClose?.() }}
-                  className="w-full flex items-center gap-2 px-2.5 py-2 text-xs transition-colors"
-                  style={{ color: selectedAccount?.id === acc.id ? '#ffffff' : '#8b949e' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#0d1117'}
+                  className="w-full flex items-center gap-2 px-2.5 py-2 text-xs"
+                  style={{ color: selectedAccount?.id === acc.id ? '#ffffff' : '#8B949E' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#0D1117'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
                   <div style={{
                     width: 18, height: 18,
                     background: 'rgba(59,130,246,0.15)',
-                    borderRadius: 4,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <span style={{ fontSize: 9, fontWeight: 600, color: '#58a6ff' }}>{acc.name.charAt(0)}</span>
+                    <span style={{ fontSize: 9, fontWeight: 600, color: '#58A6FF' }}>{acc.name.charAt(0)}</span>
                   </div>
                   <span className="truncate">{acc.name}</span>
                   {selectedAccount?.id === acc.id && (
-                    <span className="ml-auto" style={{ width: 5, height: 5, borderRadius: '50%', background: '#3fb950', display: 'inline-block' }} />
+                    <span className="ml-auto" style={{ width: 5, height: 5, background: '#3FB950', display: 'inline-block' }} />
                   )}
                 </button>
               ))}
               <button
                 onClick={() => { setShowNewAccount(true); setShowAccountMenu(false) }}
-                className="w-full flex items-center gap-2 px-2.5 py-2 text-xs transition-colors"
-                style={{ color: '#484f58', borderTop: '1px solid #21262d' }}
-                onMouseEnter={e => { e.currentTarget.style.background = '#0d1117'; e.currentTarget.style.color = '#8b949e'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#484f58'; }}
+                className="w-full flex items-center gap-2 px-2.5 py-2 text-xs"
+                style={{ color: '#484F58', borderTop: '1px solid #30363D' }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#0D1117'; e.currentTarget.style.color = '#8B949E'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#484F58'; }}
               >
                 <Plus style={{ width: 12, height: 12 }} />
                 <span>Add account</span>
@@ -155,7 +153,7 @@ export default function Sidebar({ onClose }) {
         </nav>
 
         {/* Bottom: user info + sign out */}
-        <div className="px-3 py-3 space-y-1" style={{ borderTop: '1px solid #21262d' }}>
+        <div className="px-3 py-3 space-y-1" style={{ borderTop: '1px solid #30363D' }}>
           {selectedAccount && (
             <button onClick={() => setShowSettings(true)} className="nav-link w-full">
               <Settings style={{ width: 14, height: 14, flexShrink: 0 }} />
@@ -165,9 +163,9 @@ export default function Sidebar({ onClose }) {
 
           {/* User profile section - clickable for account management */}
           <div
-            className="flex items-center gap-2 px-2.5 py-2 rounded-md cursor-pointer transition-colors group"
+            className="flex items-center gap-2 px-2.5 py-2 cursor-pointer group"
             style={{ background: 'transparent' }}
-            onMouseEnter={e => e.currentTarget.style.background = '#161b22'}
+            onMouseEnter={e => e.currentTarget.style.background = '#161B22'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             onClick={() => setShowSettings(true)}
             title="Click to manage accounts or close profile"
@@ -176,39 +174,36 @@ export default function Sidebar({ onClose }) {
               width: 26, height: 26,
               background: 'rgba(59,130,246,0.15)',
               border: '1px solid rgba(59,130,246,0.3)',
-              borderRadius: '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11, fontWeight: 600, color: '#58a6ff',
+              fontSize: 11, fontWeight: 600, color: '#58A6FF',
               flexShrink: 0,
               position: 'relative',
             }}>
               {user?.email?.charAt(0).toUpperCase()}
               {/* Status indicator dot */}
-              <span className="pulse-dot" style={{
+              <span style={{
                 position: 'absolute',
                 bottom: -1,
                 right: -1,
                 width: 8,
                 height: 8,
-                borderRadius: '50%',
                 background: statusColor,
-                border: '2px solid #0a0c10',
+                border: '2px solid #0D1117',
               }} />
             </div>
-            <span className="text-xs truncate flex-1" style={{ color: '#8b949e' }}>
+            <span className="text-xs truncate flex-1" style={{ color: '#8B949E' }}>
               {user?.email?.split('@')[0]}
             </span>
             <div style={{
               display: 'flex', alignItems: 'center', gap: 3,
-              color: '#484f58',
-              transition: 'color 0.12s ease',
+              color: '#484F58',
             }}
             >
               <LogOut
                 onClick={(e) => { e.stopPropagation(); handleSignOut(); }}
                 style={{ width: 13, height: 13 }}
-                onMouseEnter={e => { e.currentTarget.style.color = '#f85149'; }}
-                onMouseLeave={e => { e.currentTarget.style.color = '#484f58'; }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#F85149'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#484F58'; }}
                 title="Sign out"
               />
             </div>
