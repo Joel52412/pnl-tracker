@@ -190,10 +190,11 @@ export function calcPayoutProgress(account, trades, payouts = []) {
     .map(([date]) => date)
     .sort()
 
-  const count = qualifyingDays.length
-  const progress = required > 0 ? Math.min(100, (count / required) * 100) : 0
+  const rawCount = qualifyingDays.length
+  const count = Math.min(rawCount, required)
+  const progress = required > 0 ? Math.min(100, (rawCount / required) * 100) : 0
 
-  return { count, required, progress, qualifyingDays, met: count >= required, lastPayout, cutoff }
+  return { count, required, progress, qualifyingDays, met: rawCount >= required, lastPayout, cutoff }
 }
 
 // Consistency rule: best single day must not exceed X% of total profit
