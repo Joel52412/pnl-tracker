@@ -107,6 +107,34 @@ export function calcStaticDrawdown(startBalance, trades, maxDrawdown) {
   return { floor, currentBalance, buffer, bufferPercent, warningLevel, breached: currentBalance <= floor }
 }
 
+// Builds a per-day floor series for trailing modes so the chart can draw a rising
+// floor line instead of a single flat value.  Returns null for static drawdown.
+export function buildFloorCurve(account, trades) {
+  const start = Number(account.start_balance)
+  const maxDD = Number(account.max_drawdown || 0)
+  const lock = Number(account.drawdown_lock_threshold || 0)
+  const type = account.drawdown_type
+
+  if (!maxDD || type === 'static') return null
+
+  const dailyMap = getDailyPnLMap(trades)
+  const dates = Object.keys(dailyMap).sort()
+
+  let hwm = start
+  let running = start
+  const curve = []
+
+  for (const date of dates) {
+    running += dailyMap[date]
+    if (running > hwm) hwm = running
+    let floor = hwm - maxDD
+    if (lock > 0 && hwm >= start + lock) floor = start + lock - maxDD
+    curve.push({ date, floor })
+  }
+
+  return curve
+}
+
 export function calcDrawdown(account, trades) {
   const lock = account.drawdown_lock_threshold
   if (account.drawdown_type === 'intraday_trailing') {
@@ -216,6 +244,7 @@ export function calcEvalMetrics(account, trades) {
     drawdown, dailyLoss, consistency, todayPnL,
     passed, failed: drawdown.breached,
     equityCurve: buildEquityCurve(start, trades),
+    floorCurve: buildFloorCurve(account, trades),
     recentTrades: [...trades].sort((a, b) => b.date.localeCompare(a.date) || b.created_at?.localeCompare(a.created_at)).slice(0, 8),
   }
 }
@@ -244,6 +273,7 @@ export function calcFundedMetrics(account, trades, payouts = []) {
     currentBalance, netBalance, tradingProfit, totalWithdrawn,
     drawdown, dailyLoss, payout, consistency, todayPnL,
     equityCurve: buildEquityCurve(start, trades),
+    floorCurve: buildFloorCurve(account, trades),
     recentTrades: [...trades].sort((a, b) => b.date.localeCompare(a.date) || b.created_at?.localeCompare(a.created_at)).slice(0, 8),
   }
 }

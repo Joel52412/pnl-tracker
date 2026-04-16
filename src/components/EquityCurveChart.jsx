@@ -21,7 +21,12 @@ export default function EquityCurveChart({ curve, startBalance, floor, height = 
   const labels = allPoints.map(p => p.date === 'Start' ? 'Start' : formatDateShort(p.date))
   const data = allPoints.map(p => p.balance)
 
-  const floorLine = floor !== undefined ? allPoints.map(() => floor) : null
+  // floor can be a single number (static — flat line) or an array aligned to allPoints
+  const floorLine = Array.isArray(floor)
+    ? floor
+    : floor !== undefined
+    ? allPoints.map(() => floor)
+    : null
   const startingBalanceLine = allPoints.map(() => startBalance)
 
   const isPositive = data[data.length - 1] >= startBalance

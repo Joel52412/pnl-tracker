@@ -198,7 +198,7 @@ export default function DashFunded({ account, trades, payouts }) {
               </div>
             </div>
             <div className="p-4 pb-2">
-              <EquityCurveChart curve={m.equityCurve} startBalance={Number(account.start_balance)} floor={m.drawdown.floor} height={chartExpanded ? 340 : 180} />
+              <EquityCurveChart curve={m.equityCurve} startBalance={Number(account.start_balance)} floor={m.floorCurve ? [Number(account.start_balance) - Number(account.max_drawdown), ...m.floorCurve.map(p => p.floor)] : m.drawdown.floor} height={chartExpanded ? 340 : 180} />
             </div>
           </div>
         )}

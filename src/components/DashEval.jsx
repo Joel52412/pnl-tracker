@@ -213,7 +213,9 @@ export default function DashEval({ account, trades }) {
             <EquityCurveChart
               curve={m.equityCurve}
               startBalance={Number(account.start_balance)}
-              floor={m.drawdown.floor}
+              floor={m.floorCurve
+                ? [Number(account.start_balance) - Number(account.max_drawdown), ...m.floorCurve.map(p => p.floor)]
+                : m.drawdown.floor}
               height={chartExpanded ? 340 : 180}
             />
           </div>
