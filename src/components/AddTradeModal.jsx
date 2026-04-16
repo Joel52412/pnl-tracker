@@ -29,6 +29,10 @@ export default function AddTradeModal({ onClose, prefillDate }) {
     if (isNaN(pnl)) { setError('PnL must be a valid number.'); return }
     if (!form.date) { setError('Date is required.'); return }
 
+    // Determine outcome type based on PnL
+    let outcome = pnl > 0 ? 'WIN' : 'LOSS'
+    if (pnl === 0) outcome = 'BE'
+
     setLoading(true)
     try {
       await addTrade({
@@ -38,6 +42,7 @@ export default function AddTradeModal({ onClose, prefillDate }) {
         session: form.session || null,
         instrument: form.instrument || null,
         notes: form.notes?.trim() || null,
+        outcome, // Store explicit outcome
       })
       onClose()
     } catch (err) {

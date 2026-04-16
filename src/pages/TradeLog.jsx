@@ -33,7 +33,8 @@ export default function TradeLog() {
           !t.date.includes(q) &&
           !t.instrument?.toLowerCase().includes(q) &&
           !t.notes?.toLowerCase().includes(q) &&
-          !String(t.pnl).includes(q)
+          !String(t.pnl).includes(q) &&
+          !(t.outcome && t.outcome.toLowerCase().includes(q))
         ) return false
       }
       return true
@@ -48,7 +49,10 @@ export default function TradeLog() {
 
   const totalPnL = filtered.reduce((s, t) => s + Number(t.pnl), 0)
   const winners = filtered.filter(t => Number(t.pnl) > 0).length
-  const winRate = filtered.length > 0 ? (winners / filtered.length * 100).toFixed(0) : 0
+  const breakEvens = filtered.filter(t => Number(t.pnl) === 0).length
+  // Win rate excludes break-evens from denominator
+  const tradeCountForWinRate = filtered.filter(t => Number(t.pnl) !== 0).length
+  const winRate = tradeCountForWinRate > 0 ? (winners / tradeCountForWinRate * 100).toFixed(0) : 0
 
   async function confirmDelete(id) {
     try {
@@ -82,7 +86,7 @@ export default function TradeLog() {
 
       {/* Summary bar */}
       {filtered.length > 0 && (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="card p-3 text-center">
             <div className={`text-lg font-mono ${pnlClass(totalPnL)}`}>{formatCurrency(totalPnL)}</div>
             <div className="text-xs text-gray-500 mt-0.5">Total PnL</div>
@@ -94,6 +98,10 @@ export default function TradeLog() {
           <div className="card p-3 text-center">
             <div className={`text-lg ${Number(winRate) >= 50 ? 'text-emerald-400' : 'text-red-400'}`}>{winRate}%</div>
             <div className="text-xs text-gray-500 mt-0.5">Win Rate</div>
+          </div>
+          <div className="card p-3 text-center">
+            <div className="text-lg text-amber-400">{breakEvens}</div>
+            <div className="text-xs text-gray-500 mt-0.5">Break Even</div>
           </div>
         </div>
       )}
@@ -166,14 +174,23 @@ export default function TradeLog() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(trade => (
+                {filtered.map(trade => {
+                  const pnlVal = Number(trade.pnl)
+                  const outcome = trade.outcome || (pnlVal > 0 ? 'WIN' : pnlVal < 0 ? 'LOSS' : 'BE')
+                  const badgeClass = pnlVal > 0 
+                    ? 'bg-[#1a2e1f] text-[#3fb950] border-[#2ea043]' 
+                    : pnlVal < 0 
+                      ? 'bg-[#2d1a1a] text-[#f85149] border-[#a3201a]' 
+                      : 'bg-[#1e1b2e] text-[#d29922] border-[#8f6a1a]'
+                  
+                  return (
                   <tr key={trade.id} className="transition-colors group" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                     <td className="px-4 py-3 text-gray-300 font-mono text-xs whitespace-nowrap">
                       {formatDate(trade.date)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <span className={`font-mono ${pnlClass(trade.pnl)}`}>
-                        {formatCurrency(Number(trade.pnl))}
+                        {formatCurrency(pnlVal)}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -182,9 +199,9 @@ export default function TradeLog() {
                         : <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>}
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell">
-                      {trade.session
-                        ? <span className="badge badge-gray">{trade.session}</span>
-                        : <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>}
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border ${badgeClass}`}>
+                        {outcome}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-right hidden md:table-cell font-mono text-xs">
                       {trade.r_value != null
@@ -206,7 +223,8 @@ export default function TradeLog() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>
