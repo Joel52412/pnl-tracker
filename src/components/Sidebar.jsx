@@ -18,7 +18,7 @@ const NAV = [
 
 export default function Sidebar({ onClose }) {
   const { signOut, user } = useAuth()
-  const { accounts, selectedAccount, setSelectedAccount } = useAccount()
+  const { accounts, selectedAccount, setSelectedAccount, trades } = useAccount()
   const navigate = useNavigate()
   const [showAccountMenu, setShowAccountMenu] = useState(false)
   const [showNewAccount, setShowNewAccount] = useState(false)
@@ -29,9 +29,11 @@ export default function Sidebar({ onClose }) {
     navigate('/login')
   }
 
-  // Calculate today's PnL for status indicator
-  const todayPnL = selectedAccount?.today_pnl || 0
-  const hasTradesToday = selectedAccount?.trades_today > 0
+  // Calculate today's PnL from actual trades (accounts table doesn't have these columns)
+  const todayStr = new Intl.DateTimeFormat('en-CA').format(new Date())
+  const todayTrades = trades.filter(t => t.date === todayStr)
+  const todayPnL = todayTrades.reduce((s, t) => s + Number(t.pnl), 0)
+  const hasTradesToday = todayTrades.length > 0
   const statusColor = !hasTradesToday ? '#484f58' : todayPnL >= 0 ? '#3fb950' : '#f85149'
 
   return (

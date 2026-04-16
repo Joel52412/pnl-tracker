@@ -16,6 +16,7 @@ const DEFAULTS = {
   start_balance: 25000,
   drawdown_type: 'trailing_eod',
   max_drawdown: 1500,
+  drawdown_lock_threshold: 0,
   daily_loss_limit: 400,
   profit_target: 1500,
   min_trading_days: 5,
@@ -109,6 +110,7 @@ export default function AccountSetup({ account = null, onClose, onSaved, isFirst
       start_balance: Number(form.start_balance),
       drawdown_type: form.drawdown_type || 'trailing_eod',
       max_drawdown: Number(form.max_drawdown) || 0,
+      drawdown_lock_threshold: Number(form.drawdown_lock_threshold) || 0,
       daily_loss_limit: Number(form.daily_loss_limit) || 0,
       profit_target: isEval ? Number(form.profit_target) || null : null,
       min_trading_days: isEval ? Number(form.min_trading_days) || 0 : 0,
@@ -213,13 +215,28 @@ export default function AccountSetup({ account = null, onClose, onSaved, isFirst
                   <label className="input-label">Drawdown Type</label>
                   <select value={form.drawdown_type || 'trailing_eod'} onChange={e => setForm(f => ({ ...f, drawdown_type: e.target.value }))} className="input">
                     <option value="trailing_eod">Trailing EOD</option>
+                    <option value="intraday_trailing">Trailing Intraday</option>
                     <option value="static">Static</option>
                   </select>
+                  <p className="text-xs text-gray-600 mt-1">
+                    {form.drawdown_type === 'trailing_eod' ? 'Floor trails up at end of each day' :
+                     form.drawdown_type === 'intraday_trailing' ? 'Floor trails up on every trade in real-time' :
+                     'Floor fixed at start balance − max drawdown'}
+                  </p>
                 </div>
                 <div>
                   <label className="input-label">Max Drawdown ($)</label>
                   <input {...num('max_drawdown')} type="number" step="any" min="1" className="input" required={isPropFirm} />
                 </div>
+                {form.drawdown_type !== 'static' && (
+                  <div className="col-span-2">
+                    <label className="input-label">Lock Floor Threshold ($) <span className="text-gray-600">(0 = never locks)</span></label>
+                    <input {...num('drawdown_lock_threshold')} type="number" step="any" min="0" className="input" placeholder="e.g. 1500" />
+                    <p className="text-xs text-gray-600 mt-1">
+                      Once your profit reaches this amount, the floor stops trailing and locks in place. Set equal to Max Drawdown to lock floor at starting balance.
+                    </p>
+                  </div>
+                )}
                 <div className="col-span-2 sm:col-span-1">
                   <label className="input-label">Daily Loss Limit ($)</label>
                   <input {...num('daily_loss_limit')} type="number" step="any" min="1" className="input" required={isPropFirm} />
@@ -237,6 +254,7 @@ export default function AccountSetup({ account = null, onClose, onSaved, isFirst
                 <div>
                   <label className="input-label">Profit Target ($)</label>
                   <input {...num('profit_target')} type="number" step="any" min="1" className="input" />
+                  <p className="text-xs text-gray-600 mt-1">Amount of <span className="text-gray-400">profit</span> needed — not target balance</p>
                 </div>
                 <div>
                   <label className="input-label">Min Trading Days</label>
@@ -312,14 +330,19 @@ export default function AccountSetup({ account = null, onClose, onSaved, isFirst
 
           {/* Floor preview for prop firm */}
           {isPropFirm && form.start_balance && form.max_drawdown && (
-            <div className="bg-surface-800 border border-surface-600 rounded-lg p-4">
-              <p className="text-xs text-gray-500 mb-1 font-medium">Floor Preview</p>
+            <div className="bg-surface-800 border border-surface-600 rounded-lg p-4 space-y-1">
+              <p className="text-xs text-gray-500 font-medium">Floor Preview</p>
               <div className="text-sm font-mono text-gray-300">
-                {form.drawdown_type === 'trailing_eod'
-                  ? <span>Floor = <span className="text-amber-400">Peak Balance</span> − <span className="text-red-400">${Number(form.max_drawdown || 0).toLocaleString()}</span></span>
-                  : <span>Floor = <span className="text-emerald-400">${(Number(form.start_balance || 0) - Number(form.max_drawdown || 0)).toLocaleString()}</span></span>
+                {form.drawdown_type === 'static'
+                  ? <span>Floor = <span className="text-emerald-400">${(Number(form.start_balance || 0) - Number(form.max_drawdown || 0)).toLocaleString()}</span> (fixed)</span>
+                  : <span>Floor = <span className="text-amber-400">Peak Balance</span> − <span className="text-red-400">${Number(form.max_drawdown || 0).toLocaleString()}</span></span>
                 }
               </div>
+              {form.drawdown_type !== 'static' && Number(form.drawdown_lock_threshold) > 0 && (
+                <div className="text-xs font-mono text-gray-500">
+                  Locks at <span className="text-emerald-400">${(Number(form.start_balance || 0) + Number(form.drawdown_lock_threshold) - Number(form.max_drawdown || 0)).toLocaleString()}</span> once profit ≥ ${Number(form.drawdown_lock_threshold).toLocaleString()}
+                </div>
+              )}
             </div>
           )}
 

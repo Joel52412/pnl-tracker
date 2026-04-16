@@ -6,7 +6,7 @@ import { formatDate, pnlClass } from '../utils/formatters'
 import { useMoney } from '../contexts/HideContext'
 import { getDailyPnLMap } from '../utils/calculations'
 import { format } from 'date-fns'
-import { BookText, Plus, X, Save, Search, ChevronDown, ChevronUp, AlertCircle, Trash2 } from 'lucide-react'
+import { BookText, Plus, X, Save, Search, AlertCircle, Trash2, Edit2 } from 'lucide-react'
 
 const MARKET_CONDITIONS = ['Trending', 'Ranging', 'Choppy', 'News-driven', 'Low Volume', 'High Volatility']
 
@@ -162,6 +162,79 @@ function JournalForm({ entry, dateStr, accountId, userId, onSaved, onClose, dayP
   )
 }
 
+function JournalViewModal({ entry, dayPnL, onEdit, onClose }) {
+  const fmt = useMoney()
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-surface-900 border border-surface-700 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto animate-slide-in">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-surface-700 sticky top-0 bg-surface-900">
+          <div>
+            <div className="flex items-center gap-2">
+              <BookText className="w-4 h-4 text-blue-400" />
+              <h2 className="text-base text-white">
+                {format(new Date(entry.date + 'T12:00:00'), 'EEEE, MMMM d, yyyy')}
+              </h2>
+            </div>
+            {dayPnL !== undefined && (
+              <span className={`text-xs font-mono ml-6 ${pnlClass(dayPnL)}`}>
+                {dayPnL >= 0 ? '+' : ''}{fmt(dayPnL)} on this day
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={onEdit} className="btn-ghost px-2.5 py-1.5 text-xs flex items-center gap-1.5">
+              <Edit2 className="w-3 h-3" />Edit
+            </button>
+            <button onClick={onClose} className="btn-ghost p-1.5"><X className="w-4 h-4" /></button>
+          </div>
+        </div>
+
+        <div className="p-5 space-y-5">
+          {/* Meta row */}
+          <div className="flex items-center gap-3 flex-wrap">
+            {entry.market_condition && (
+              <span className="badge badge-blue">{entry.market_condition}</span>
+            )}
+            {entry.mindset_rating && (
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-500 mr-1">Mindset</span>
+                {[1,2,3,4,5].map(n => (
+                  <div key={n} className={`w-2.5 h-2.5 rounded-full ${n <= entry.mindset_rating ? 'bg-brand' : 'bg-surface-700'}`} />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {entry.premarket && (
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Pre-market Plan</p>
+              <p className="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">{entry.premarket}</p>
+            </div>
+          )}
+
+          {entry.postmarket && (
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Post-market Review</p>
+              <p className="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">{entry.postmarket}</p>
+            </div>
+          )}
+
+          {entry.mindset && (
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Mindset Notes</p>
+              <p className="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">{entry.mindset}</p>
+            </div>
+          )}
+
+          {!entry.premarket && !entry.postmarket && !entry.mindset && (
+            <p className="text-sm text-gray-500 text-center py-4">No written notes for this entry.</p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Journal() {
   const { selectedAccount, trades } = useAccount()
   const { user } = useAuth()
@@ -169,6 +242,7 @@ export default function Journal() {
   const [journals, setJournals] = useState([])
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
+  const [viewEntry, setViewEntry] = useState(null) // read-only view
   const [editEntry, setEditEntry] = useState(null) // null = closed, {} = new, {id,...} = editing
   const [editDate, setEditDate] = useState(null)
   const [deleteId, setDeleteId] = useState(null)
@@ -292,7 +366,11 @@ export default function Journal() {
           {filtered.map(j => {
             const dayPnL = dailyMap[j.date]
             return (
-              <div key={j.id} className="card p-4 hover:bg-surface-800/50 transition-colors group">
+              <div
+                key={j.id}
+                onClick={() => setViewEntry(j)}
+                className="card p-4 hover:bg-surface-800/50 transition-colors group cursor-pointer"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div className="w-9 h-9 bg-surface-800 border border-surface-700 rounded-lg flex items-center justify-center shrink-0">
@@ -331,12 +409,12 @@ export default function Journal() {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
                     <button
                       onClick={() => openEdit(j)}
-                      className="btn-ghost px-2.5 py-1.5 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="btn-ghost px-2.5 py-1.5 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
                     >
-                      Edit
+                      <Edit2 className="w-3 h-3" />Edit
                     </button>
                     <button
                       onClick={() => setDeleteId(j.id)}
@@ -350,6 +428,16 @@ export default function Journal() {
             )
           })}
         </div>
+      )}
+
+      {/* Read-only view modal */}
+      {viewEntry && (
+        <JournalViewModal
+          entry={viewEntry}
+          dayPnL={dailyMap[viewEntry.date]}
+          onEdit={() => { openEdit(viewEntry); setViewEntry(null) }}
+          onClose={() => setViewEntry(null)}
+        />
       )}
 
       {/* Journal form modal */}

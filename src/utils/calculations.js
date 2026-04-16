@@ -29,9 +29,10 @@ export function buildEquityCurve(startBalance, trades) {
   return curve
 }
 
-export function calcTrailingDrawdown(startBalance, trades, maxDrawdown) {
+export function calcTrailingDrawdown(startBalance, trades, maxDrawdown, lockThreshold = 0) {
   const start = Number(startBalance)
   const maxDD = Number(maxDrawdown)
+  const lock = Number(lockThreshold || 0)
   const today = todayStr()
   const dailyMap = getDailyPnLMap(trades)
   const sortedDates = Object.keys(dailyMap).sort()
@@ -47,7 +48,40 @@ export function calcTrailingDrawdown(startBalance, trades, maxDrawdown) {
 
   const todayPnL = dailyMap[today] || 0
   const currentBalance = prevEodBalance + todayPnL
-  const floor = hwm - maxDD
+  let floor = hwm - maxDD
+  // Lock: once HWM reaches start + lockThreshold, floor freezes at (start + lock - maxDD)
+  if (lock > 0 && hwm >= start + lock) floor = start + lock - maxDD
+
+  const buffer = currentBalance - floor
+  const bufferPercent = Math.min(100, Math.max(0, (buffer / maxDD) * 100))
+
+  let warningLevel = 'ok'
+  if (bufferPercent <= 20) warningLevel = 'critical'
+  else if (bufferPercent <= 40) warningLevel = 'warning'
+
+  return { hwm, floor, currentBalance, buffer, bufferPercent, warningLevel, breached: currentBalance <= floor }
+}
+
+export function calcIntradayTrailingDrawdown(startBalance, trades, maxDrawdown, lockThreshold = 0) {
+  const start = Number(startBalance)
+  const maxDD = Number(maxDrawdown)
+  const lock = Number(lockThreshold || 0)
+
+  const sorted = [...trades].sort((a, b) =>
+    a.date.localeCompare(b.date) || (a.created_at || '').localeCompare(b.created_at || '')
+  )
+
+  let hwm = start
+  let running = start
+  for (const t of sorted) {
+    running += Number(t.pnl)
+    if (running > hwm) hwm = running
+  }
+
+  const currentBalance = running
+  let floor = hwm - maxDD
+  if (lock > 0 && hwm >= start + lock) floor = start + lock - maxDD
+
   const buffer = currentBalance - floor
   const bufferPercent = Math.min(100, Math.max(0, (buffer / maxDD) * 100))
 
@@ -74,8 +108,12 @@ export function calcStaticDrawdown(startBalance, trades, maxDrawdown) {
 }
 
 export function calcDrawdown(account, trades) {
+  const lock = account.drawdown_lock_threshold
+  if (account.drawdown_type === 'intraday_trailing') {
+    return calcIntradayTrailingDrawdown(account.start_balance, trades, account.max_drawdown, lock)
+  }
   if (account.drawdown_type === 'trailing_eod') {
-    return calcTrailingDrawdown(account.start_balance, trades, account.max_drawdown)
+    return calcTrailingDrawdown(account.start_balance, trades, account.max_drawdown, lock)
   }
   return calcStaticDrawdown(account.start_balance, trades, account.max_drawdown)
 }
@@ -200,8 +238,10 @@ export function calcFundedMetrics(account, trades, payouts = []) {
   const today = todayStr()
   const todayPnL = trades.filter(t => t.date === today).reduce((s, t) => s + Number(t.pnl), 0)
 
+  const netBalance = currentBalance - totalWithdrawn
+
   return {
-    currentBalance, tradingProfit, totalWithdrawn,
+    currentBalance, netBalance, tradingProfit, totalWithdrawn,
     drawdown, dailyLoss, payout, consistency, todayPnL,
     equityCurve: buildEquityCurve(start, trades),
     recentTrades: [...trades].sort((a, b) => b.date.localeCompare(a.date) || b.created_at?.localeCompare(a.created_at)).slice(0, 8),

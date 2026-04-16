@@ -156,7 +156,7 @@ export default function TradeLog() {
                     { key: 'date', label: 'Date' },
                     { key: 'pnl', label: 'PnL', right: true },
                     { key: 'instrument', label: 'Instrument' },
-                    { key: 'session', label: 'Session' },
+                    { key: 'session', label: 'Outcome' },
                     { key: 'r_value', label: 'R', right: true },
                     { key: 'notes', label: 'Notes' },
                   ].map(({ key, label, right }) => (

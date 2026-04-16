@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useAccount } from '../contexts/AccountContext'
 import { calcTradeStats, getDailyPnLMap } from '../utils/calculations'
 import { formatCurrency, pnlClass } from '../utils/formatters'
@@ -7,6 +8,7 @@ import {
 } from 'chart.js'
 import { Bar, Doughnut } from 'react-chartjs-2'
 import { TrendingUp, TrendingDown, Activity, Award, Minus, Flame, Zap, AlertTriangle } from 'lucide-react'
+import { subMonths, format } from 'date-fns'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement)
 
@@ -38,8 +40,18 @@ const chartTooltipDefaults = {
   padding: 10,
 }
 
+const RANGE_OPTIONS = [
+  { label: '1M',  months: 1 },
+  { label: '3M',  months: 3 },
+  { label: '6M',  months: 6 },
+  { label: '9M',  months: 9 },
+  { label: '1Y',  months: 12 },
+  { label: 'All', months: null },
+]
+
 export default function Stats() {
   const { trades, loadingTrades } = useAccount()
+  const [range, setRange] = useState(3)
 
   if (loadingTrades) {
     return (
@@ -65,7 +77,9 @@ export default function Stats() {
   if (!s) return null
 
   const dailyMap = getDailyPnLMap(trades)
-  const sortedDates = Object.keys(dailyMap).sort().slice(-30)
+  const allSortedDates = Object.keys(dailyMap).sort()
+  const cutoff = range != null ? format(subMonths(new Date(), range), 'yyyy-MM-dd') : null
+  const sortedDates = cutoff ? allSortedDates.filter(d => d >= cutoff) : allSortedDates
   const dailyPnLArray = sortedDates.map(d => dailyMap[d])
 
   // Bar chart - last 30 days
@@ -253,8 +267,23 @@ export default function Stats() {
       {/* Daily PnL bar chart */}
       {sortedDates.length > 0 && (
         <div className="card">
-          <div className="card-header">
-            <h2 className="text-sm text-white">Daily PnL — Last 30 Days</h2>
+          <div className="card-header flex items-center justify-between">
+            <h2 className="text-sm text-white">Daily PnL</h2>
+            <div className="flex items-center gap-1">
+              {RANGE_OPTIONS.map(opt => (
+                <button
+                  key={opt.label}
+                  onClick={() => setRange(opt.months)}
+                  className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
+                    range === opt.months
+                      ? 'bg-brand/20 text-brand'
+                      : 'text-gray-500 hover:text-gray-300'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="p-4" style={{ height: 220 }}>
             <Bar data={barData} options={barOptions} />

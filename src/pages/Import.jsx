@@ -9,7 +9,7 @@ import {
 } from '../utils/csvParsers'
 import {
   Upload, FileText, CheckCircle2, AlertCircle, X,
-  ChevronDown, Trash2, Clock, SkipForward,
+  Trash2, Clock, SkipForward, RotateCcw, Download,
 } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -44,6 +44,8 @@ export default function Import() {
   const [importError, setImportError] = useState('')
   const [history, setHistory] = useState([])
   const [loadingHistory, setLoadingHistory] = useState(false)
+  const [undoId, setUndoId] = useState(null)
+  const [undoing, setUndoing] = useState(false)
 
   const fileInputRef = useRef(null)
 
@@ -142,23 +144,30 @@ export default function Import() {
     setImporting(true)
     setImportError('')
     try {
+      // Insert import record first so we get its ID to tag trades
+      const { data: importRecord, error: importErr } = await supabase
+        .from('imports')
+        .insert({
+          account_id: selectedAccount.id,
+          user_id: user.id,
+          broker: parsed.broker,
+          filename: file?.name || 'unknown.csv',
+          trades_imported: toAdd.length,
+          trades_skipped: toSkip.length,
+        })
+        .select()
+        .single()
+      if (importErr) throw importErr
+
       const rows = toAdd.map(t => ({
         ...t,
         account_id: selectedAccount.id,
         user_id: user.id,
+        import_batch_id: importRecord.id,
       }))
 
       const { error: insertErr } = await supabase.from('trades').insert(rows)
       if (insertErr) throw insertErr
-
-      await supabase.from('imports').insert({
-        account_id: selectedAccount.id,
-        user_id: user.id,
-        broker: parsed.broker,
-        filename: file?.name || 'unknown.csv',
-        trades_imported: toAdd.length,
-        trades_skipped: toSkip.length,
-      })
 
       await fetchTrades()
       await fetchHistory()
@@ -170,6 +179,45 @@ export default function Import() {
     } finally {
       setImporting(false)
     }
+  }
+
+  async function handleUndo(importId) {
+    setUndoing(true)
+    try {
+      await supabase.from('trades').delete().eq('import_batch_id', importId).eq('account_id', selectedAccount.id)
+      await supabase.from('imports').delete().eq('id', importId)
+      await fetchTrades()
+      await fetchHistory()
+      setUndoId(null)
+    } catch {
+      // silently ignore — user can retry
+    } finally {
+      setUndoing(false)
+    }
+  }
+
+  function handleExport() {
+    if (!trades.length) return
+    const headers = ['Date', 'PnL', 'Instrument', 'Session', 'Outcome', 'R Value', 'Notes']
+    const rows = [...trades]
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map(t => [
+        t.date,
+        Number(t.pnl).toFixed(2),
+        t.instrument || '',
+        t.session || '',
+        t.outcome || (Number(t.pnl) > 0 ? 'WIN' : Number(t.pnl) < 0 ? 'LOSS' : 'BE'),
+        t.r_value != null ? Number(t.r_value).toFixed(2) : '',
+        (t.notes || '').replace(/"/g, '""'),
+      ])
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `trades-export-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   async function deleteHistory(id) {
@@ -432,7 +480,14 @@ export default function Import() {
 
       {/* ── Import History ────────────────────────────────────────────── */}
       <div>
-        <h2 className="text-sm text-white mb-3">Import History</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm text-white">Import History</h2>
+          {trades.length > 0 && (
+            <button onClick={handleExport} className="btn-ghost flex items-center gap-1.5 text-xs px-3 py-1.5">
+              <Download className="w-3.5 h-3.5" />Export Trades
+            </button>
+          )}
+        </div>
         <div className="card overflow-hidden">
           {loadingHistory ? (
             <div className="flex items-center justify-center py-10">
@@ -476,14 +531,23 @@ export default function Import() {
                           {h.trades_skipped}
                         </span>
                       </td>
-                      <td className="px-4 py-3 w-10">
-                        <button
-                          onClick={() => deleteHistory(h.id)}
-                          className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-500/10 rounded-md transition-all"
-                          title="Remove from history"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-red-400" />
-                        </button>
+                      <td className="px-4 py-3 w-20">
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                          <button
+                            onClick={() => setUndoId(h.id)}
+                            className="p-1.5 hover:bg-amber-500/10 rounded-md"
+                            title="Undo import — removes all trades from this batch"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                          </button>
+                          <button
+                            onClick={() => deleteHistory(h.id)}
+                            className="p-1.5 hover:bg-red-500/10 rounded-md"
+                            title="Remove from history (keeps trades)"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -493,6 +557,37 @@ export default function Import() {
           )}
         </div>
       </div>
+      {/* Undo confirmation dialog */}
+      {undoId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-surface-900 border border-surface-700 rounded-xl p-6 max-w-sm w-full animate-slide-in">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-amber-500/10 border border-amber-500/20 rounded-full flex items-center justify-center shrink-0">
+                <RotateCcw className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white text-sm">Undo this import?</h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Tagged trades from this batch will be deleted and the history record removed.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-4">
+              <button onClick={() => setUndoId(null)} disabled={undoing} className="btn-secondary flex-1">Cancel</button>
+              <button
+                onClick={() => handleUndo(undoId)}
+                disabled={undoing}
+                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {undoing
+                  ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Undoing...</>
+                  : 'Yes, undo import'
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -136,8 +136,18 @@ function parseDateTime(str) {
 }
 
 function toDateStr(d) {
-  // Returns YYYY-MM-DD from a Date, always using UTC date
+  // Returns YYYY-MM-DD using UTC — correct for MT5 (timestamps have explicit 'Z')
   return d.toISOString().split('T')[0]
+}
+
+function toLocalDateStr(d) {
+  // Returns YYYY-MM-DD using the browser's local timezone — correct for NT8 and
+  // Tradovate whose timestamps carry no timezone suffix and represent local time.
+  // Using toISOString() here would shift dates past ~8pm ET to the next UTC day.
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 // ─── NinjaTrader 8 ────────────────────────────────────────────────────────────
@@ -160,7 +170,7 @@ export function parseNinjaTrader(rows) {
     if (!d) continue
 
     trades.push({
-      date: toDateStr(d),
+      date: toLocalDateStr(d),
       pnl,
       instrument: cleanInstrument(row['Instrument']?.trim() || '') || null,
       session: detectSession(d),
@@ -192,7 +202,7 @@ export function parseTradovate(rows) {
     const rawSymbol = row['symbol']?.trim() || ''
 
     trades.push({
-      date: toDateStr(d),
+      date: toLocalDateStr(d),
       pnl: round2(pnl),
       instrument: rawSymbol ? cleanInstrument(rawSymbol) : null,
       session: detectSession(d),

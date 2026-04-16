@@ -81,16 +81,16 @@ export default function DashFunded({ account, trades, payouts }) {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="card p-4">
           <span className="stat-label">Balance</span>
-          <div className={`stat-value mt-2 ${pnlClass(m.tradingProfit)}`}>{fmt(m.currentBalance, 0)}</div>
+          <div className={`stat-value mt-2 ${pnlClass(m.tradingProfit)}`}>{fmt(m.netBalance, 0)}</div>
           <div className="text-xs font-mono mt-1" style={{ color: m.tradingProfit >= 0 ? 'rgba(0,211,149,0.5)' : 'rgba(255,71,87,0.5)' }}>
             {m.tradingProfit >= 0 ? '+' : ''}{fmt(m.tradingProfit)}
+            {m.totalWithdrawn > 0 && <span style={{ color: 'rgba(255,255,255,0.3)', marginLeft: 6 }}>−{fmt(m.totalWithdrawn)} paid</span>}
           </div>
         </div>
 
         <div className="card p-4">
           <span className="stat-label">Today</span>
           <div className={`stat-value mt-2 ${pnlClass(m.todayPnL)}`}>{fmt(m.todayPnL)}</div>
-          {m.totalWithdrawn > 0 && <div className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.25)' }}>Taken: {fmt(m.totalWithdrawn)}</div>}
         </div>
 
         <div className="card p-4">
@@ -209,10 +209,15 @@ export default function DashFunded({ account, trades, payouts }) {
         <div className="card">
           <div className="card-header flex items-center justify-between">
             <h2 className="text-sm text-white">Equity Curve</h2>
-            {m.drawdown.hwm && <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>HWM: <span className="font-mono text-white">{fmt(m.drawdown.hwm, 0)}</span></span>}
+            <div className="flex items-center gap-3">
+              {m.drawdown.hwm && <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>HWM: <span className="font-mono text-white">{fmt(m.drawdown.hwm, 0)}</span></span>}
+              <button onClick={() => setChartExpanded(e => !e)} className="btn-ghost p-1.5" title={chartExpanded ? 'Collapse' : 'Expand'}>
+                {chartExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+              </button>
+            </div>
           </div>
           <div className="p-4 pb-2">
-            <EquityCurveChart curve={m.equityCurve} startBalance={Number(account.start_balance)} floor={m.drawdown.floor} />
+            <EquityCurveChart curve={m.equityCurve} startBalance={Number(account.start_balance)} floor={m.drawdown.floor} height={chartExpanded ? 340 : 180} />
           </div>
         </div>
       )}
