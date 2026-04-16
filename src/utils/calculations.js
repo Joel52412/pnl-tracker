@@ -163,17 +163,25 @@ export function calcDailyLoss(account, trades) {
   return { todayPnL, usedLoss, remaining: Math.max(0, remaining), remainingPercent, warningLevel, breached: usedLoss >= dailyLimit }
 }
 
-// Payout qualifying days — resets after last payout date
+// Payout qualifying days — resets after each payout.
+// Trades strictly after lastPayout.date count toward the next cycle.
 export function calcPayoutProgress(account, trades, payouts = []) {
   const minDaily = Number(account.pay_min_daily)
   const required = Number(account.pay_days_required)
 
+  // Sort by date desc, then created_at desc as tiebreaker
   const lastPayout = payouts.length > 0
-    ? [...payouts].sort((a, b) => b.date.localeCompare(a.date))[0]
+    ? [...payouts].sort((a, b) => {
+        const d = String(b.date).slice(0, 10).localeCompare(String(a.date).slice(0, 10))
+        return d !== 0 ? d : (b.created_at || '').localeCompare(a.created_at || '')
+      })[0]
     : null
 
-  const filteredTrades = lastPayout
-    ? trades.filter(t => t.date > lastPayout.date)
+  // Normalise to YYYY-MM-DD — guards against Supabase returning DATE with time suffix
+  const cutoff = lastPayout ? String(lastPayout.date).slice(0, 10) : null
+
+  const filteredTrades = cutoff
+    ? trades.filter(t => String(t.date).slice(0, 10) > cutoff)
     : trades
 
   const dailyMap = getDailyPnLMap(filteredTrades)
@@ -185,7 +193,7 @@ export function calcPayoutProgress(account, trades, payouts = []) {
   const count = qualifyingDays.length
   const progress = required > 0 ? Math.min(100, (count / required) * 100) : 0
 
-  return { count, required, progress, qualifyingDays, met: count >= required, lastPayout }
+  return { count, required, progress, qualifyingDays, met: count >= required, lastPayout, cutoff }
 }
 
 // Consistency rule: best single day must not exceed X% of total profit

@@ -3,6 +3,7 @@ import { Eye, EyeOff, Plus, Shield, Clock, Trophy, TrendingUp, TrendingDown, Che
 import { calcFundedMetrics } from '../utils/calculations'
 import { formatCurrency, formatDate, pnlClass } from '../utils/formatters'
 import { useMoney, useHide } from '../contexts/HideContext'
+import { useAccount } from '../contexts/AccountContext'
 import EquityCurveChart from './EquityCurveChart'
 import AddTradeModal from './AddTradeModal'
 import PayoutModal from './PayoutModal'
@@ -41,8 +42,15 @@ export default function DashFunded({ account, trades, payouts }) {
   const [showPayout, setShowPayout] = useState(false)
   const [chartExpanded, setChartExpanded] = useState(false)
   const { hidden, toggle } = useHide()
+  const { fetchPayouts } = useAccount()
   const fmt = useMoney()
   const m = calcFundedMetrics(account, trades, payouts)
+
+  async function handlePayoutClose() {
+    setShowPayout(false)
+    // Force-refresh payouts so the qualifying day counter resets immediately
+    await fetchPayouts()
+  }
 
   const alerts = []
   if (m.drawdown.breached) alerts.push({ type: 'breach', msg: 'ACCOUNT BREACHED — Drawdown floor has been hit!' })
@@ -151,12 +159,16 @@ export default function DashFunded({ account, trades, payouts }) {
                   ? 'Requirements met — click Request Payout above'
                   : `${m.payout.required - m.payout.count} more qualifying day${m.payout.required - m.payout.count !== 1 ? 's' : ''} needed`}
               </p>
-              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Min ${account.pay_min_daily}/day to qualify</p>
-              {m.payout.lastPayout && (
-                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Last payout: {formatDate(m.payout.lastPayout.date)}</p>
-              )}
+              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                Min {fmt(account.pay_min_daily)}/day · resets each payout
+              </p>
+              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                {m.payout.cutoff
+                  ? `Counting since: ${formatDate(m.payout.cutoff)}`
+                  : 'Counting all-time qualifying days'}
+              </p>
               <div className="rounded-lg px-2 py-1.5 text-xs font-mono" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.4)' }}>
-                {fmt(Number(account.pay_min_request), 0)} – {fmt(Number(account.pay_max_request), 0)} range
+                {fmt(Number(account.pay_min_request), 0)} – {fmt(Number(account.pay_max_request), 0)} payout range
               </div>
             </div>
           </div>
@@ -291,7 +303,7 @@ export default function DashFunded({ account, trades, payouts }) {
       </div>
 
       {showAdd && <AddTradeModal onClose={() => setShowAdd(false)} />}
-      {showPayout && <PayoutModal account={account} onClose={() => setShowPayout(false)} />}
+      {showPayout && <PayoutModal account={account} onClose={handlePayoutClose} />}
     </div>
   )
 }

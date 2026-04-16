@@ -140,7 +140,9 @@ export function AccountProvider({ children }) {
     <AccountContext.Provider value={{
       accounts, selectedAccount, setSelectedAccount,
       trades, payouts, loadingAccounts, loadingTrades,
-      fetchAccounts, fetchTrades: () => fetchTrades(selectedAccount?.id),
+      fetchAccounts,
+      fetchTrades: () => fetchTrades(selectedAccount?.id),
+      fetchPayouts: () => fetchPayouts(selectedAccount?.id),
       createAccount, updateAccount, deleteAccount, deleteProfile,
       addTrade, deleteTrade, updateTrade,
       addPayout,
