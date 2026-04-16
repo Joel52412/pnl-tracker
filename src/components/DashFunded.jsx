@@ -37,19 +37,17 @@ function WarnBanner({ message, type }) {
   )
 }
 
-export default function DashFunded({ account, trades, payouts }) {
+export default function DashFunded({ account, trades }) {
   const [showAdd, setShowAdd] = useState(false)
   const [showPayout, setShowPayout] = useState(false)
   const [chartExpanded, setChartExpanded] = useState(false)
   const { hidden, toggle } = useHide()
-  const { fetchPayouts } = useAccount()
+  const { payouts } = useAccount()
   const fmt = useMoney()
   const m = calcFundedMetrics(account, trades, payouts)
 
-  async function handlePayoutClose() {
+  function handlePayoutClose() {
     setShowPayout(false)
-    // Force-refresh payouts so the qualifying day counter resets immediately
-    await fetchPayouts()
   }
 
   const alerts = []

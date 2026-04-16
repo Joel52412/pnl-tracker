@@ -4,7 +4,7 @@ import DashEval from '../components/DashEval'
 import DashFunded from '../components/DashFunded'
 
 export default function Dashboard() {
-  const { selectedAccount, trades, payouts, loadingTrades } = useAccount()
+  const { selectedAccount, trades, loadingTrades } = useAccount()
 
   if (!selectedAccount) {
     return (
@@ -25,6 +25,6 @@ export default function Dashboard() {
   const type = selectedAccount.account_type || 'simple'
 
   if (type === 'eval') return <DashEval account={selectedAccount} trades={trades} />
-  if (type === 'funded') return <DashFunded account={selectedAccount} trades={trades} payouts={payouts} />
+  if (type === 'funded') return <DashFunded account={selectedAccount} trades={trades} />
   return <DashSimple account={selectedAccount} trades={trades} />
 }
