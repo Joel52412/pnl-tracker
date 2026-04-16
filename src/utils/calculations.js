@@ -253,6 +253,40 @@ export function calcTradeStats(trades) {
     ? rValues.reduce((s, t) => s + Number(t.r_value), 0) / rValues.length
     : null
 
+  // Largest single trade win/loss
+  const largestWin  = winners.length > 0 ? Math.max(...winners.map(t => Number(t.pnl))) : 0
+  const largestLoss = losers.length  > 0 ? Math.abs(Math.min(...losers.map(t => Number(t.pnl)))) : 0
+
+  // Avg trade net PnL (all trades incl. BE)
+  const avgTrade = trades.length > 0 ? (grossWin - grossLoss) / trades.length : 0
+
+  // Win/loss streaks — sort trades chronologically
+  const sorted = [...trades].sort((a, b) =>
+    a.date.localeCompare(b.date) || (a.created_at || '').localeCompare(b.created_at || '')
+  )
+  let maxWinStreak = 0, maxLossStreak = 0
+  let curWin = 0, curLoss = 0
+  for (const t of sorted) {
+    const p = Number(t.pnl)
+    if (p > 0) {
+      curWin++; curLoss = 0
+      if (curWin > maxWinStreak) maxWinStreak = curWin
+    } else if (p < 0) {
+      curLoss++; curWin = 0
+      if (curLoss > maxLossStreak) maxLossStreak = curLoss
+    }
+    // BE trades don't break or extend streaks
+  }
+
+  // Max drawdown from running equity (trade-level, not day-level)
+  let peak = 0, running = 0, maxDrawdown = 0
+  for (const t of sorted) {
+    running += Number(t.pnl)
+    if (running > peak) peak = running
+    const dd = peak - running
+    if (dd > maxDrawdown) maxDrawdown = dd
+  }
+
   const sessionMap = {}
   for (const t of trades) {
     const s = t.session || 'Other'
@@ -275,6 +309,8 @@ export function calcTradeStats(trades) {
     winRate, profitFactor, avgWin, avgLoss, grossWin, grossLoss,
     totalPnL: grossWin - grossLoss,
     profitDays, lossDays, breakEvenDays, bestDay, worstDay,
+    largestWin, largestLoss, avgTrade,
+    maxWinStreak, maxLossStreak, maxDrawdown,
     rExpectancy, sessionMap, instrumentMap,
   }
 }

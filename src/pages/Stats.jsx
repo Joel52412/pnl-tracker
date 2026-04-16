@@ -6,7 +6,7 @@ import {
   CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement,
 } from 'chart.js'
 import { Bar, Doughnut } from 'react-chartjs-2'
-import { TrendingUp, Activity, Award, Minus } from 'lucide-react'
+import { TrendingUp, TrendingDown, Activity, Award, Minus, Flame, Zap, AlertTriangle } from 'lucide-react'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement)
 
@@ -154,7 +154,7 @@ export default function Stats() {
         <p className="text-sm text-gray-500 mt-0.5">Based on {s.totalTrades} trades</p>
       </div>
 
-      {/* Core stats grid */}
+      {/* ── Row 1: Core performance ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard
           label="Win Rate"
@@ -171,6 +171,24 @@ export default function Stats() {
           accent={s.profitFactor >= 1.5 ? 'bg-emerald-500/10' : 'bg-amber-500/10'}
         />
         <StatCard
+          label="Avg Trade"
+          value={`${s.avgTrade >= 0 ? '+' : ''}${formatCurrency(s.avgTrade, 0)}`}
+          sub="net per trade"
+          icon={s.avgTrade >= 0 ? TrendingUp : TrendingDown}
+          accent={s.avgTrade >= 0 ? 'bg-emerald-500/10' : 'bg-red-500/10'}
+        />
+        <StatCard
+          label="Max Drawdown"
+          value={s.maxDrawdown > 0 ? `-${formatCurrency(s.maxDrawdown, 0)}` : '$0'}
+          sub="peak-to-trough"
+          icon={AlertTriangle}
+          accent="bg-amber-500/10"
+        />
+      </div>
+
+      {/* ── Row 2: Trade-level vitals ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard
           label="Avg Win"
           value={formatCurrency(s.avgWin, 0)}
           sub="per winning trade"
@@ -184,24 +202,52 @@ export default function Stats() {
           icon={Minus}
           accent="bg-red-500/10"
         />
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Best Day" value={formatCurrency(s.bestDay, 0)} sub="single day record" />
-        <StatCard label="Worst Day" value={formatCurrency(s.worstDay, 0)} sub="single day drawdown" />
-        <StatCard label="Total Trades" value={s.totalTrades} sub={`${s.breakEvens} breakeven`} />
         <StatCard
-          label="R Expectancy"
-          value={s.rExpectancy !== null ? `${s.rExpectancy >= 0 ? '+' : ''}${s.rExpectancy.toFixed(2)}R` : '—'}
-          sub={s.rExpectancy !== null ? `avg per trade` : 'No R values logged'}
+          label="Largest Win"
+          value={formatCurrency(s.largestWin, 0)}
+          sub="best single trade"
+          icon={Zap}
+          accent="bg-emerald-500/10"
+        />
+        <StatCard
+          label="Largest Loss"
+          value={`-${formatCurrency(s.largestLoss, 0)}`}
+          sub="worst single trade"
+          icon={Zap}
+          accent="bg-red-500/10"
         />
       </div>
 
+      {/* ── Row 3: Streaks + days ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Profit Days" value={s.profitDays} sub="green days" accent="bg-emerald-500/10" />
-        <StatCard label="Loss Days" value={s.lossDays} sub="red days" />
-        <StatCard label="Gross Win" value={formatCurrency(s.grossWin, 0)} />
-        <StatCard label="Gross Loss" value={`-${formatCurrency(s.grossLoss, 0)}`} />
+        <StatCard
+          label="Win Streak"
+          value={s.maxWinStreak}
+          sub="max consecutive wins"
+          icon={Flame}
+          accent="bg-emerald-500/10"
+        />
+        <StatCard
+          label="Loss Streak"
+          value={s.maxLossStreak}
+          sub="max consecutive losses"
+          icon={Flame}
+          accent="bg-red-500/10"
+        />
+        <StatCard label="Best Day"  value={formatCurrency(s.bestDay, 0)}  sub={`${s.profitDays} profit day${s.profitDays !== 1 ? 's' : ''}`} />
+        <StatCard label="Worst Day" value={formatCurrency(s.worstDay, 0)} sub={`${s.lossDays} loss day${s.lossDays !== 1 ? 's' : ''}`} />
+      </div>
+
+      {/* ── Row 4: Volume + expectancy ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard label="Total Trades" value={s.totalTrades} sub={`${s.breakEvens} breakeven`} />
+        <StatCard label="Gross Win"  value={formatCurrency(s.grossWin, 0)} sub="total profit" />
+        <StatCard label="Gross Loss" value={`-${formatCurrency(s.grossLoss, 0)}`} sub="total loss" />
+        <StatCard
+          label="R Expectancy"
+          value={s.rExpectancy !== null ? `${s.rExpectancy >= 0 ? '+' : ''}${s.rExpectancy.toFixed(2)}R` : '—'}
+          sub={s.rExpectancy !== null ? 'avg per trade' : 'No R values logged'}
+        />
       </div>
 
       {/* Daily PnL bar chart */}
