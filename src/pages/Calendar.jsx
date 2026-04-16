@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { formatCurrency, pnlClass } from '../utils/formatters'
 import { useMoney } from '../contexts/HideContext'
 import AddTradeModal from '../components/AddTradeModal'
-import { ChevronLeft, ChevronRight, BookText, X, Plus, TrendingUp, TrendingDown } from 'lucide-react'
+import { ChevronLeft, ChevronRight, BookText, X, Plus, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import {
   format, startOfMonth, endOfMonth,
   startOfWeek, endOfWeek, eachDayOfInterval,
@@ -364,17 +364,20 @@ function DrillDown({ dateStr, trades, journal, pnl, fmt, onClose, onAddTrade }) 
                   style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
                 >
                   <div className="flex items-center gap-2">
-                    {Number(t.pnl) >= 0
+                    {Number(t.pnl) > 0
                       ? <TrendingUp style={{ width: 14, height: 14, color: '#00d395', flexShrink: 0 }} />
-                      : <TrendingDown style={{ width: 14, height: 14, color: '#ff4757', flexShrink: 0 }} />}
+                      : Number(t.pnl) < 0
+                        ? <TrendingDown style={{ width: 14, height: 14, color: '#ff4757', flexShrink: 0 }} />
+                        : <Minus style={{ width: 14, height: 14, color: '#6b7280', flexShrink: 0 }} />}
                     <div className="flex items-center gap-1.5">
                       {t.instrument && <span className="badge badge-blue text-xs">{t.instrument}</span>}
                       {t.session    && <span className="badge badge-gray text-xs">{t.session}</span>}
-                      {!t.instrument && !t.session && <span style={{ color: 'rgba(255,255,255,0.2)' }} className="text-xs">—</span>}
+                      {Number(t.pnl) === 0 && <span className="badge badge-amber text-xs">BE</span>}
+                      {!t.instrument && !t.session && Number(t.pnl) !== 0 && <span style={{ color: 'rgba(255,255,255,0.2)' }} className="text-xs">—</span>}
                     </div>
                   </div>
-                  <span className={`text-sm font-mono ${Number(t.pnl) >= 0 ? 'pnl-pos' : 'pnl-neg'}`}>
-                    {Number(t.pnl) >= 0 ? '+' : ''}{fmt(Number(t.pnl))}
+                  <span className={`text-sm font-mono ${Number(t.pnl) > 0 ? 'pnl-pos' : Number(t.pnl) < 0 ? 'pnl-neg' : 'pnl-zero'}`}>
+                    {Number(t.pnl) > 0 ? '+' : ''}{fmt(Number(t.pnl))}
                   </span>
                 </div>
               ))}
