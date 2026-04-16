@@ -3,6 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { X, Briefcase, AlertCircle, Trash2, UserX } from 'lucide-react'
 import { useAccount } from '../contexts/AccountContext'
 
+const DEFAULT_SESSION_SETTINGS = {
+  london:  { start: '03:00', end: '12:00' },
+  overlap: { start: '08:00', end: '12:00' },
+  ny:      { start: '08:00', end: '17:00' },
+  asia:    { start: '20:00', end: '00:00' },
+}
+
 const DEFAULTS = {
   name: 'LucidFlex 25K',
   account_type: 'eval',
@@ -17,7 +24,15 @@ const DEFAULTS = {
   pay_min_daily: 100,
   pay_min_request: 500,
   pay_max_request: 1000,
+  session_settings: DEFAULT_SESSION_SETTINGS,
 }
+
+const SESSION_ROWS = [
+  { key: 'london',  label: 'London' },
+  { key: 'overlap', label: 'NY / London Overlap' },
+  { key: 'ny',      label: 'New York' },
+  { key: 'asia',    label: 'Asia' },
+]
 
 const ACCOUNT_TYPES = [
   { value: 'simple', label: 'Simple Tracker', desc: 'No prop firm rules — just track trades' },
@@ -29,7 +44,16 @@ export default function AccountSetup({ account = null, onClose, onSaved, isFirst
   const { createAccount, updateAccount, deleteAccount, deleteProfile, accounts } = useAccount()
   const navigate = useNavigate()
   const isEdit = !!account
-  const [form, setForm] = useState(account || DEFAULTS)
+  const [form, setForm] = useState(() => {
+    if (!account) return DEFAULTS
+    return {
+      ...account,
+      session_settings: {
+        ...DEFAULT_SESSION_SETTINGS,
+        ...(account.session_settings || {}),
+      },
+    }
+  })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [confirmDeleteAccount, setConfirmDeleteAccount] = useState(false)
@@ -50,6 +74,19 @@ export default function AccountSetup({ account = null, onClose, onSaved, isFirst
   }
   function field(key) {
     return { value: form[key] ?? '', onChange: e => setForm(f => ({ ...f, [key]: e.target.value })) }
+  }
+
+  function sessionTime(sessionKey, bound) {
+    return {
+      value: form.session_settings?.[sessionKey]?.[bound] ?? '',
+      onChange: e => setForm(f => ({
+        ...f,
+        session_settings: {
+          ...f.session_settings,
+          [sessionKey]: { ...f.session_settings[sessionKey], [bound]: e.target.value },
+        },
+      })),
+    }
   }
 
   async function handleDeleteAccount() {
@@ -80,6 +117,7 @@ export default function AccountSetup({ account = null, onClose, onSaved, isFirst
       pay_min_daily: isFunded ? Number(form.pay_min_daily) || 100 : 100,
       pay_min_request: isFunded ? Number(form.pay_min_request) || 500 : 500,
       pay_max_request: isFunded ? Number(form.pay_max_request) || 1000 : 1000,
+      session_settings: form.session_settings || DEFAULT_SESSION_SETTINGS,
     }
     if (!payload.name.trim()) { setError('Account name is required.'); return }
     if (payload.start_balance <= 0) { setError('Starting balance must be positive.'); return }
@@ -242,6 +280,35 @@ export default function AccountSetup({ account = null, onClose, onSaved, isFirst
               </div>
             </section>
           )}
+
+          {/* Session Windows */}
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs text-gray-500 uppercase tracking-wider">Session Windows</h3>
+              <span className="text-xs text-gray-600">Eastern Time (ET)</span>
+            </div>
+            <div className="space-y-2">
+              {SESSION_ROWS.map(({ key, label }) => (
+                <div key={key} className="flex items-center gap-3 p-2.5 rounded-lg"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <span className="text-sm text-gray-300 w-36 shrink-0">{label}</span>
+                  <div className="flex items-center gap-2 flex-1">
+                    <input
+                      type="time"
+                      {...sessionTime(key, 'start')}
+                      className="input py-1.5 text-xs flex-1"
+                    />
+                    <span className="text-xs text-gray-600 shrink-0">to</span>
+                    <input
+                      type="time"
+                      {...sessionTime(key, 'end')}
+                      className="input py-1.5 text-xs flex-1"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
 
           {/* Floor preview for prop firm */}
           {isPropFirm && form.start_balance && form.max_drawdown && (
