@@ -235,7 +235,7 @@ export function calcTradeStats(trades) {
   const grossWin = winners.reduce((s, t) => s + Number(t.pnl), 0)
   const grossLoss = Math.abs(losers.reduce((s, t) => s + Number(t.pnl), 0))
 
-  const winRate = trades.length > 0 ? (winners.length / trades.length) * 100 : 0
+  const winRate = (winners.length + losers.length) > 0 ? (winners.length / (winners.length + losers.length)) * 100 : 0
   const profitFactor = grossLoss > 0 ? grossWin / grossLoss : grossWin > 0 ? Infinity : 0
   const avgWin = winners.length > 0 ? grossWin / winners.length : 0
   const avgLoss = losers.length > 0 ? grossLoss / losers.length : 0

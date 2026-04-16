@@ -159,7 +159,7 @@ export default function Stats() {
         <StatCard
           label="Win Rate"
           value={`${s.winRate.toFixed(1)}%`}
-          sub={`${s.winners}W / ${s.losers}L`}
+          sub={`${s.winners}W / ${s.losers}L${s.breakEvens > 0 ? ` / ${s.breakEvens}BE` : ''}`}
           icon={TrendingUp}
           accent={s.winRate >= 50 ? 'bg-emerald-500/10' : 'bg-red-500/10'}
         />
