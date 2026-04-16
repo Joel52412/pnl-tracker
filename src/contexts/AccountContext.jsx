@@ -129,10 +129,16 @@ export function AccountProvider({ children }) {
   }
 
   async function addPayout(data) {
+    // Optimistic update — reset qualifying day counter immediately
+    const optimistic = { id: 'optimistic', ...data, account_id: selectedAccount.id, user_id: user.id, created_at: new Date().toISOString() }
+    setPayouts(prev => [optimistic, ...prev])
     const { error } = await supabase
       .from('payouts')
       .insert({ ...data, account_id: selectedAccount.id, user_id: user.id })
-    if (error) throw error
+    if (error) {
+      setPayouts(prev => prev.filter(p => p.id !== 'optimistic'))
+      throw error
+    }
     await fetchPayouts(selectedAccount.id)
   }
 
