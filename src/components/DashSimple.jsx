@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { TrendingUp, TrendingDown, Zap, Eye, EyeOff, Plus } from 'lucide-react'
+import { TrendingUp, TrendingDown, Zap, Eye, EyeOff, Plus, Maximize2, Minimize2 } from 'lucide-react'
 import { calcSimpleMetrics } from '../utils/calculations'
 import { formatCurrency, pnlClass } from '../utils/formatters'
 import { useMoney, useHide } from '../contexts/HideContext'
@@ -9,6 +9,7 @@ import { formatDate } from '../utils/formatters'
 
 export default function DashSimple({ account, trades }) {
   const [showAdd, setShowAdd] = useState(false)
+  const [chartExpanded, setChartExpanded] = useState(false)
   const { hidden, toggle } = useHide()
   const fmt = useMoney()
   const m = calcSimpleMetrics(account, trades)
@@ -70,9 +71,14 @@ export default function DashSimple({ account, trades }) {
 
       {/* Equity curve */}
       <div className="card">
-        <div className="card-header"><h2 className="text-sm text-white">Equity Curve</h2></div>
+        <div className="card-header flex items-center justify-between">
+          <h2 className="text-sm text-white">Equity Curve</h2>
+          <button onClick={() => setChartExpanded(e => !e)} className="btn-ghost p-1.5" title={chartExpanded ? 'Collapse' : 'Expand'}>
+            {chartExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+          </button>
+        </div>
         <div className="p-4 pb-2">
-          <EquityCurveChart curve={m.equityCurve} startBalance={Number(account.start_balance)} />
+          <EquityCurveChart curve={m.equityCurve} startBalance={Number(account.start_balance)} height={chartExpanded ? 340 : 180} />
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Eye, EyeOff, Plus, Shield, Clock, Target, Calendar, TrendingUp, TrendingDown, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
-import { calcEvalMetrics } from '../utils/calculations'
+import { Eye, EyeOff, Plus, Shield, Clock, Target, Calendar, TrendingUp, TrendingDown, CheckCircle2, XCircle, AlertTriangle, Maximize2, Minimize2 } from 'lucide-react'
+import { calcEvalMetrics, todayStr } from '../utils/calculations'
 import { formatCurrency, formatDate, pnlClass } from '../utils/formatters'
 import { useMoney, useHide } from '../contexts/HideContext'
 import EquityCurveChart from './EquityCurveChart'
@@ -38,9 +38,12 @@ function WarnBanner({ message, type }) {
 
 export default function DashEval({ account, trades }) {
   const [showAdd, setShowAdd] = useState(false)
+  const [chartExpanded, setChartExpanded] = useState(false)
   const { hidden, toggle } = useHide()
   const fmt = useMoney()
   const m = calcEvalMetrics(account, trades)
+  const today = todayStr()
+  const todayTradeCount = trades.filter(t => t.date === today).length
 
   const alerts = []
   if (m.failed) alerts.push({ type: 'breach', msg: 'ACCOUNT FAILED — Drawdown floor was hit.' })
@@ -89,7 +92,7 @@ export default function DashEval({ account, trades }) {
           <span className="stat-label">Today</span>
           <div className={`stat-value mt-2 ${pnlClass(m.todayPnL)}`}>{fmt(m.todayPnL)}</div>
           <div className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.25)' }}>
-            {trades.filter(t => t.date === new Date().toISOString().split('T')[0]).length} trades
+            {todayTradeCount} trade{todayTradeCount !== 1 ? 's' : ''}
           </div>
         </div>
 
@@ -122,76 +125,97 @@ export default function DashEval({ account, trades }) {
 
       {/* Eval progress cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {account.profit_target > 0 && (
-          <div className="card p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Target style={{ width: 16, height: 16, color: '#00d395' }} />
-              <span className="text-sm text-white">Profit Target</span>
-              {m.profitProgress >= 100 && <CheckCircle2 style={{ width: 16, height: 16, color: '#00d395' }} className="ml-auto" />}
-            </div>
-            <div className="flex items-end justify-between mb-2">
-              <span className={`text-2xl font-mono ${pnlClass(m.profit)}`}>{fmt(m.profit)}</span>
-              <span className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>/ {fmt(m.profitTarget, 0)}</span>
-            </div>
-            <ProgressBar percent={m.profitProgress} warningLevel="ok" />
-            <p className="text-xs mt-2" style={{ color: 'rgba(255,255,255,0.3)' }}>{m.profitProgress.toFixed(1)}% of target reached</p>
-          </div>
-        )}
-
-        {account.min_trading_days > 0 && (
-          <div className="card p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Calendar style={{ width: 16, height: 16, color: '#60a5fa' }} />
-              <span className="text-sm text-white">Trading Days</span>
-              {m.tradingDays >= m.minDays && <CheckCircle2 style={{ width: 16, height: 16, color: '#00d395' }} className="ml-auto" />}
-            </div>
-            <div className="flex items-end justify-between mb-2">
-              <span className="text-2xl font-mono text-white">{m.tradingDays}</span>
-              <span className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>/ {m.minDays} days</span>
-            </div>
-            <ProgressBar percent={m.tradingDaysProgress} warningLevel={m.tradingDays >= m.minDays ? 'ok' : 'ok'} />
-            <p className="text-xs mt-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
-              {m.tradingDays >= m.minDays ? 'Minimum met ✓' : `${m.minDays - m.tradingDays} more day${m.minDays - m.tradingDays !== 1 ? 's' : ''} required`}
-            </p>
-          </div>
-        )}
-
-        {m.consistency && (
-          <div className="card p-5">
-            <div className="flex items-center gap-2 mb-4">
-              {m.consistency.breached
-                ? <XCircle style={{ width: 16, height: 16, color: '#ff4757' }} />
-                : <CheckCircle2 style={{ width: 16, height: 16, color: '#00d395' }} />}
-              <span className="text-sm text-white">Consistency Rule</span>
-              <span className={`badge ml-auto text-xs ${m.consistency.breached ? 'badge-red' : m.consistency.warningLevel === 'warning' ? 'badge-amber' : 'badge-green'}`}>
-                {m.consistency.limit}% limit
-              </span>
-            </div>
-            <div className="space-y-1 text-xs font-mono" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              <div>Best day: <span className="pnl-pos">{fmt(m.consistency.bestDay)}</span></div>
-              <div>Total profit: <span className={pnlClass(m.consistency.totalProfit)}>{fmt(m.consistency.totalProfit)}</span></div>
-              <div className={`font-semibold ${m.consistency.breached ? 'pnl-neg' : m.consistency.warningLevel === 'warning' ? 'text-amber-400' : 'pnl-pos'}`}>
-                {m.consistency.bestDayPct.toFixed(1)}% of total (limit {m.consistency.limit}%)
+        {account.profit_target > 0 && (() => {
+          const met = m.profitProgress >= 100
+          return (
+            <div className="card p-5" style={met ? { borderColor: 'rgba(63,185,80,0.35)', background: 'rgba(63,185,80,0.04)' } : {}}>
+              <div className="flex items-center gap-2 mb-4">
+                <Target style={{ width: 16, height: 16, color: met ? '#3fb950' : '#00d395' }} />
+                <span className="text-sm text-white">Profit Target</span>
+                {met && <CheckCircle2 style={{ width: 16, height: 16, color: '#3fb950' }} className="ml-auto" />}
               </div>
-            </div>
-            {m.consistency.breached && (
-              <div className="mt-3 p-2 rounded-lg" style={{ background: 'rgba(255,71,87,0.08)', border: '1px solid rgba(255,71,87,0.2)' }}>
-                <p className="text-xs" style={{ color: '#ff4757' }}>Need <span className="font-semibold">{fmt(m.consistency.needed)}</span> more profit to comply</p>
+              <div className="flex items-end justify-between mb-2">
+                <span className={`text-2xl font-mono ${pnlClass(m.profit)}`}>{fmt(m.profit)}</span>
+                <span className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>/ {fmt(m.profitTarget, 0)}</span>
               </div>
-            )}
-          </div>
-        )}
+              <ProgressBar percent={m.profitProgress} warningLevel="ok" />
+              <p className="text-xs mt-2" style={{ color: met ? '#3fb950' : 'rgba(255,255,255,0.3)' }}>
+                {met ? 'Target reached ✓' : `${m.profitProgress.toFixed(1)}% of target`}
+              </p>
+            </div>
+          )
+        })()}
+
+        {account.min_trading_days > 0 && (() => {
+          const met = m.tradingDays >= m.minDays
+          return (
+            <div className="card p-5" style={met ? { borderColor: 'rgba(63,185,80,0.35)', background: 'rgba(63,185,80,0.04)' } : {}}>
+              <div className="flex items-center gap-2 mb-4">
+                <Calendar style={{ width: 16, height: 16, color: '#60a5fa' }} />
+                <span className="text-sm text-white">Trading Days</span>
+                {met && <CheckCircle2 style={{ width: 16, height: 16, color: '#3fb950' }} className="ml-auto" />}
+              </div>
+              <div className="flex items-end justify-between mb-2">
+                <span className="text-2xl font-mono text-white">{m.tradingDays}</span>
+                <span className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>/ {m.minDays} days</span>
+              </div>
+              <ProgressBar percent={m.tradingDaysProgress} warningLevel="ok" />
+              <p className="text-xs mt-2" style={{ color: met ? '#3fb950' : 'rgba(255,255,255,0.3)' }}>
+                {met ? 'Minimum met ✓' : `${m.minDays - m.tradingDays} more day${m.minDays - m.tradingDays !== 1 ? 's' : ''} needed`}
+              </p>
+            </div>
+          )
+        })()}
+
+        {m.consistency && (() => {
+          const ok = !m.consistency.breached && m.consistency.warningLevel === 'ok'
+          return (
+            <div className="card p-5" style={ok ? { borderColor: 'rgba(63,185,80,0.35)', background: 'rgba(63,185,80,0.04)' } : m.consistency.breached ? { borderColor: 'rgba(248,81,73,0.35)' } : {}}>
+              <div className="flex items-center gap-2 mb-4">
+                {m.consistency.breached
+                  ? <XCircle style={{ width: 16, height: 16, color: '#f85149' }} />
+                  : <CheckCircle2 style={{ width: 16, height: 16, color: '#3fb950' }} />}
+                <span className="text-sm text-white">Consistency Rule</span>
+                <span className={`badge ml-auto text-xs ${m.consistency.breached ? 'badge-red' : m.consistency.warningLevel === 'warning' ? 'badge-amber' : 'badge-green'}`}>
+                  {m.consistency.limit}% limit
+                </span>
+              </div>
+              <div className="space-y-1 text-xs font-mono" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                <div>Best day: <span className="pnl-pos">{fmt(m.consistency.bestDay)}</span></div>
+                <div>Total profit: <span className={pnlClass(m.consistency.totalProfit)}>{fmt(m.consistency.totalProfit)}</span></div>
+                <div className={`font-semibold ${m.consistency.breached ? 'pnl-neg' : m.consistency.warningLevel === 'warning' ? 'text-amber-400' : 'pnl-pos'}`}>
+                  {m.consistency.bestDayPct.toFixed(1)}% of total (limit {m.consistency.limit}%)
+                </div>
+              </div>
+              {m.consistency.breached && (
+                <div className="mt-3 p-2 rounded-lg" style={{ background: 'rgba(248,81,73,0.08)', border: '1px solid rgba(248,81,73,0.2)' }}>
+                  <p className="text-xs" style={{ color: '#f85149' }}>Need <span className="font-semibold">{fmt(m.consistency.needed)}</span> more profit to comply</p>
+                </div>
+              )}
+            </div>
+          )
+        })()}
       </div>
 
       {/* Equity curve + recent trades */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className={`grid gap-5 ${chartExpanded ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
         <div className="card">
           <div className="card-header flex items-center justify-between">
             <h2 className="text-sm text-white">Equity Curve</h2>
-            {m.drawdown.hwm && <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>HWM: <span className="font-mono text-white">{fmt(m.drawdown.hwm, 0)}</span></span>}
+            <div className="flex items-center gap-3">
+              {m.drawdown.hwm && <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>HWM: <span className="font-mono text-white">{fmt(m.drawdown.hwm, 0)}</span></span>}
+              <button onClick={() => setChartExpanded(e => !e)} className="btn-ghost p-1.5" title={chartExpanded ? 'Collapse chart' : 'Expand chart'}>
+                {chartExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+              </button>
+            </div>
           </div>
           <div className="p-4 pb-2">
-            <EquityCurveChart curve={m.equityCurve} startBalance={Number(account.start_balance)} floor={m.drawdown.floor} />
+            <EquityCurveChart
+              curve={m.equityCurve}
+              startBalance={Number(account.start_balance)}
+              floor={m.drawdown.floor}
+              height={chartExpanded ? 340 : 180}
+            />
           </div>
         </div>
 

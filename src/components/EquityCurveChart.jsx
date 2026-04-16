@@ -8,10 +8,10 @@ import { formatDateShort } from '../utils/formatters'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
-export default function EquityCurveChart({ curve, startBalance, floor }) {
+export default function EquityCurveChart({ curve, startBalance, floor, height = 180 }) {
   if (!curve || curve.length === 0) {
     return (
-      <div className="flex items-center justify-center h-52 text-gray-600 text-sm">
+      <div className="flex items-center justify-center text-gray-600 text-sm" style={{ height }}>
         No trade data yet — add your first trade to see the equity curve
       </div>
     )
@@ -125,7 +125,7 @@ export default function EquityCurveChart({ curve, startBalance, floor }) {
   }
 
   return (
-    <div style={{ height: 90 }}>
+    <div style={{ height }}>
       <Line data={{ labels, datasets }} options={options} />
     </div>
   )

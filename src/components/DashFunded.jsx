@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Eye, EyeOff, Plus, Shield, Clock, Trophy, TrendingUp, TrendingDown, CheckCircle2, AlertTriangle, XCircle, DollarSign } from 'lucide-react'
+import { Eye, EyeOff, Plus, Shield, Clock, Trophy, TrendingUp, TrendingDown, CheckCircle2, AlertTriangle, XCircle, DollarSign, Maximize2, Minimize2 } from 'lucide-react'
 import { calcFundedMetrics } from '../utils/calculations'
 import { formatCurrency, formatDate, pnlClass } from '../utils/formatters'
 import { useMoney, useHide } from '../contexts/HideContext'
@@ -39,6 +39,7 @@ function WarnBanner({ message, type }) {
 export default function DashFunded({ account, trades, payouts }) {
   const [showAdd, setShowAdd] = useState(false)
   const [showPayout, setShowPayout] = useState(false)
+  const [chartExpanded, setChartExpanded] = useState(false)
   const { hidden, toggle } = useHide()
   const fmt = useMoney()
   const m = calcFundedMetrics(account, trades, payouts)
@@ -189,10 +190,15 @@ export default function DashFunded({ account, trades, payouts }) {
           <div className="card">
             <div className="card-header flex items-center justify-between">
               <h2 className="text-sm text-white">Equity Curve</h2>
-              {m.drawdown.hwm && <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>HWM: <span className="font-mono text-white">{fmt(m.drawdown.hwm, 0)}</span></span>}
+              <div className="flex items-center gap-3">
+                {m.drawdown.hwm && <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>HWM: <span className="font-mono text-white">{fmt(m.drawdown.hwm, 0)}</span></span>}
+                <button onClick={() => setChartExpanded(e => !e)} className="btn-ghost p-1.5" title={chartExpanded ? 'Collapse' : 'Expand'}>
+                  {chartExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                </button>
+              </div>
             </div>
             <div className="p-4 pb-2">
-              <EquityCurveChart curve={m.equityCurve} startBalance={Number(account.start_balance)} floor={m.drawdown.floor} />
+              <EquityCurveChart curve={m.equityCurve} startBalance={Number(account.start_balance)} floor={m.drawdown.floor} height={chartExpanded ? 340 : 180} />
             </div>
           </div>
         )}
