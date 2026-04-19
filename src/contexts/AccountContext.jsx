@@ -132,14 +132,19 @@ export function AccountProvider({ children }) {
     // Optimistic update — reset qualifying day counter immediately
     const optimistic = { id: 'optimistic', ...data, account_id: selectedAccount.id, user_id: user.id, created_at: new Date().toISOString() }
     setPayouts(prev => [optimistic, ...prev])
-    const { error } = await supabase
+    const { data: created, error } = await supabase
       .from('payouts')
       .insert({ ...data, account_id: selectedAccount.id, user_id: user.id })
+      .select()
+      .single()
     if (error) {
       setPayouts(prev => prev.filter(p => p.id !== 'optimistic'))
       throw error
     }
-    await fetchPayouts(selectedAccount.id)
+    // Replace optimistic with the real DB record — avoids stale read-replica lag
+    setPayouts(prev => [created, ...prev.filter(p => p.id !== 'optimistic')])
+    // Background sync to pick up any server-side changes
+    fetchPayouts(selectedAccount.id)
   }
 
   return (
