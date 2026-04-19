@@ -3,6 +3,7 @@ import { Eye, EyeOff, Plus, Shield, Clock, Target, Calendar, TrendingUp, Trendin
 import { calcEvalMetrics, todayStr } from '../utils/calculations'
 import { formatCurrency, formatDate, pnlClass } from '../utils/formatters'
 import { useMoney, useHide } from '../contexts/HideContext'
+import { useAccount } from '../contexts/AccountContext'
 import EquityCurveChart from './EquityCurveChart'
 import AddTradeModal from './AddTradeModal'
 
@@ -36,10 +37,11 @@ function WarnBanner({ message, type }) {
   )
 }
 
-export default function DashEval({ account, trades }) {
+export default function DashEval() {
   const [showAdd, setShowAdd] = useState(false)
   const [chartExpanded, setChartExpanded] = useState(false)
   const { hidden, toggle } = useHide()
+  const { selectedAccount: account, trades } = useAccount()
   const fmt = useMoney()
   const m = calcEvalMetrics(account, trades)
   const today = todayStr()

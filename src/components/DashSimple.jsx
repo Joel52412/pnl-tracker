@@ -3,14 +3,16 @@ import { TrendingUp, TrendingDown, Zap, Eye, EyeOff, Plus, Maximize2, Minimize2 
 import { calcSimpleMetrics } from '../utils/calculations'
 import { formatCurrency, pnlClass } from '../utils/formatters'
 import { useMoney, useHide } from '../contexts/HideContext'
+import { useAccount } from '../contexts/AccountContext'
 import EquityCurveChart from './EquityCurveChart'
 import AddTradeModal from './AddTradeModal'
 import { formatDate } from '../utils/formatters'
 
-export default function DashSimple({ account, trades }) {
+export default function DashSimple() {
   const [showAdd, setShowAdd] = useState(false)
   const [chartExpanded, setChartExpanded] = useState(false)
   const { hidden, toggle } = useHide()
+  const { selectedAccount: account, trades } = useAccount()
   const fmt = useMoney()
   const m = calcSimpleMetrics(account, trades)
 

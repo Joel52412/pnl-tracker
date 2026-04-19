@@ -37,12 +37,12 @@ function WarnBanner({ message, type }) {
   )
 }
 
-export default function DashFunded({ account, trades }) {
+export default function DashFunded() {
   const [showAdd, setShowAdd] = useState(false)
   const [showPayout, setShowPayout] = useState(false)
   const [chartExpanded, setChartExpanded] = useState(false)
   const { hidden, toggle } = useHide()
-  const { payouts } = useAccount()
+  const { selectedAccount: account, trades, payouts } = useAccount()
   const fmt = useMoney()
   const m = calcFundedMetrics(account, trades, payouts)
 
