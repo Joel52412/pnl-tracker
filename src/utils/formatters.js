@@ -1,33 +1,43 @@
 export function formatCurrency(value, decimals = 2) {
-  const abs = Math.abs(value)
+  const n = Number(value)
+  if (!Number.isFinite(n)) return '$0.00'
+  const abs = Math.abs(n)
   const formatted = abs.toLocaleString('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   })
-  return value < 0 ? `-$${formatted}` : `$${formatted}`
+  return n < 0 ? `-$${formatted}` : `$${formatted}`
 }
 
 export function formatPercent(value, decimals = 1) {
-  return `${value.toFixed(decimals)}%`
+  const n = Number(value)
+  if (!Number.isFinite(n)) return '0.0%'
+  return `${n.toFixed(decimals)}%`
 }
 
 export function formatR(value) {
   if (value === null || value === undefined) return '—'
-  return `${value >= 0 ? '+' : ''}${value.toFixed(2)}R`
+  const n = Number(value)
+  if (!Number.isFinite(n)) return '—'
+  return `${n >= 0 ? '+' : ''}${n.toFixed(2)}R`
 }
 
 export function formatDate(dateStr) {
   if (!dateStr) return '—'
-  const [year, month, day] = dateStr.split('-')
-  return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+  const s = String(dateStr).slice(0, 10)
+  const [year, month, day] = s.split('-')
+  if (!year || !month || !day) return '—'
+  return new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric',
   })
 }
 
 export function formatDateShort(dateStr) {
   if (!dateStr) return '—'
-  const [year, month, day] = dateStr.split('-')
-  return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+  const s = String(dateStr).slice(0, 10)
+  const [year, month, day] = s.split('-')
+  if (!year || !month || !day) return '—'
+  return new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric',
   })
 }

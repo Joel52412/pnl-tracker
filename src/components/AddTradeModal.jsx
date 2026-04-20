@@ -33,16 +33,26 @@ export default function AddTradeModal({ onClose, prefillDate }) {
     let outcome = pnl > 0 ? 'WIN' : 'LOSS'
     if (pnl === 0) outcome = 'BE'
 
+    let rValue = null
+    if (form.r_value !== '') {
+      const parsed = parseFloat(form.r_value)
+      if (!Number.isFinite(parsed)) {
+        setError('R value must be a valid number.')
+        return
+      }
+      rValue = parsed
+    }
+
     setLoading(true)
     try {
       await addTrade({
         date: form.date,
         pnl,
-        r_value: form.r_value !== '' ? parseFloat(form.r_value) : null,
+        r_value: rValue,
         session: form.session || null,
         instrument: form.instrument || null,
         notes: form.notes?.trim() || null,
-        outcome, // Store explicit outcome
+        outcome,
       })
       onClose()
     } catch (err) {

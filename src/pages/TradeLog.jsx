@@ -29,11 +29,12 @@ export default function TradeLog() {
       if (instrumentSearch && !t.instrument?.toLowerCase().includes(instrumentSearch.toLowerCase())) return false
       if (search) {
         const q = search.toLowerCase()
+        const dateStr = String(t.date || '').slice(0, 10)
         if (
-          !t.date.includes(q) &&
+          !dateStr.includes(q) &&
           !t.instrument?.toLowerCase().includes(q) &&
           !t.notes?.toLowerCase().includes(q) &&
-          !String(t.pnl).includes(q) &&
+          !String(t.pnl ?? '').includes(q) &&
           !(t.outcome && t.outcome.toLowerCase().includes(q))
         ) return false
       }
@@ -41,10 +42,20 @@ export default function TradeLog() {
     })
     .sort((a, b) => {
       let va = a[sortKey], vb = b[sortKey]
-      if (sortKey === 'pnl') { va = Number(va); vb = Number(vb) }
-      if (va < vb) return sortDir === 'asc' ? -1 : 1
-      if (va > vb) return sortDir === 'asc' ? 1 : -1
-      return 0
+      const dir = sortDir === 'asc' ? 1 : -1
+      // Nulls/undefineds always sort to the bottom regardless of direction
+      const aNull = va === null || va === undefined || va === ''
+      const bNull = vb === null || vb === undefined || vb === ''
+      if (aNull && bNull) return 0
+      if (aNull) return 1
+      if (bNull) return -1
+      if (sortKey === 'pnl' || sortKey === 'r_value') {
+        return ((Number(va) || 0) - (Number(vb) || 0)) * dir
+      }
+      if (sortKey === 'date') {
+        return String(va).slice(0, 10).localeCompare(String(vb).slice(0, 10)) * dir
+      }
+      return String(va).localeCompare(String(vb)) * dir
     })
 
   const totalPnL = filtered.reduce((s, t) => s + Number(t.pnl), 0)
@@ -57,6 +68,9 @@ export default function TradeLog() {
   async function confirmDelete(id) {
     try {
       await deleteTrade(id)
+    } catch (err) {
+      console.error('Failed to delete trade:', err)
+      alert(`Failed to delete trade: ${err.message || err}`)
     } finally {
       setDeleteId(null)
     }
@@ -156,13 +170,13 @@ export default function TradeLog() {
                     { key: 'date', label: 'Date' },
                     { key: 'pnl', label: 'PnL', right: true },
                     { key: 'instrument', label: 'Instrument' },
-                    { key: 'session', label: 'Outcome' },
+                    { key: 'outcome', label: 'Outcome' },
                     { key: 'r_value', label: 'R', right: true },
                     { key: 'notes', label: 'Notes' },
                   ].map(({ key, label, right }) => (
                     <th
                       key={key}
-                      className={`px-4 py-3 text-xs font-medium text-gray-500 cursor-pointer hover:text-gray-300 transition-colors ${right ? 'text-right' : 'text-left'} ${key === 'notes' ? 'hidden md:table-cell' : ''} ${key === 'r_value' ? 'hidden md:table-cell' : ''} ${key === 'session' ? 'hidden sm:table-cell' : ''}`}
+                      className={`px-4 py-3 text-xs font-medium text-gray-500 cursor-pointer hover:text-gray-300 transition-colors ${right ? 'text-right' : 'text-left'} ${key === 'notes' ? 'hidden md:table-cell' : ''} ${key === 'r_value' ? 'hidden md:table-cell' : ''} ${key === 'outcome' ? 'hidden sm:table-cell' : ''}`}
                       onClick={() => toggleSort(key)}
                     >
                       <span className="flex items-center gap-1 justify-end" style={right ? {} : { justifyContent: 'flex-start' }}>

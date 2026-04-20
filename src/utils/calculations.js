@@ -1,10 +1,35 @@
 import { format } from 'date-fns'
 
+// Normalise a date value (DATE or TIMESTAMPTZ) to YYYY-MM-DD
+function dstr(d) {
+  return d ? String(d).slice(0, 10) : ''
+}
+
+// Stable chronological comparator with created_at tiebreaker — safe for null/undefined
+function tradeAsc(a, b) {
+  const byDate = dstr(a.date).localeCompare(dstr(b.date))
+  if (byDate !== 0) return byDate
+  return String(a.created_at || '').localeCompare(String(b.created_at || ''))
+}
+
+function tradeDesc(a, b) {
+  const byDate = dstr(b.date).localeCompare(dstr(a.date))
+  if (byDate !== 0) return byDate
+  return String(b.created_at || '').localeCompare(String(a.created_at || ''))
+}
+
+function safePercent(numerator, denominator) {
+  const d = Number(denominator)
+  if (!Number.isFinite(d) || d === 0) return 0
+  return (Number(numerator) / d) * 100
+}
+
 export function getDailyPnLMap(trades) {
   const map = {}
   for (const t of trades) {
-    const d = t.date
-    map[d] = (map[d] || 0) + Number(t.pnl)
+    const d = dstr(t.date)
+    if (!d) continue
+    map[d] = (map[d] || 0) + Number(t.pnl || 0)
   }
   return map
 }
@@ -14,14 +39,14 @@ export function todayStr() {
 }
 
 export function calcCurrentBalance(startBalance, trades) {
-  return Number(startBalance) + trades.reduce((s, t) => s + Number(t.pnl), 0)
+  return Number(startBalance || 0) + trades.reduce((s, t) => s + Number(t.pnl || 0), 0)
 }
 
 export function buildEquityCurve(startBalance, trades) {
   const dailyMap = getDailyPnLMap(trades)
   const dates = Object.keys(dailyMap).sort()
   const curve = []
-  let running = Number(startBalance)
+  let running = Number(startBalance || 0)
   for (const date of dates) {
     running += dailyMap[date]
     curve.push({ date, balance: running })
@@ -30,8 +55,8 @@ export function buildEquityCurve(startBalance, trades) {
 }
 
 export function calcTrailingDrawdown(startBalance, trades, maxDrawdown, lockThreshold = 0) {
-  const start = Number(startBalance)
-  const maxDD = Number(maxDrawdown)
+  const start = Number(startBalance || 0)
+  const maxDD = Number(maxDrawdown || 0)
   const lock = Number(lockThreshold || 0)
   const today = todayStr()
   const dailyMap = getDailyPnLMap(trades)
@@ -53,28 +78,26 @@ export function calcTrailingDrawdown(startBalance, trades, maxDrawdown, lockThre
   if (lock > 0 && hwm >= start + lock) floor = start + lock - maxDD
 
   const buffer = currentBalance - floor
-  const bufferPercent = Math.min(100, Math.max(0, (buffer / maxDD) * 100))
+  const bufferPercent = Math.min(100, Math.max(0, safePercent(buffer, maxDD)))
 
   let warningLevel = 'ok'
   if (bufferPercent <= 20) warningLevel = 'critical'
   else if (bufferPercent <= 40) warningLevel = 'warning'
 
-  return { hwm, floor, currentBalance, buffer, bufferPercent, warningLevel, breached: currentBalance <= floor }
+  return { hwm, floor, currentBalance, buffer, bufferPercent, warningLevel, breached: maxDD > 0 && currentBalance <= floor }
 }
 
 export function calcIntradayTrailingDrawdown(startBalance, trades, maxDrawdown, lockThreshold = 0) {
-  const start = Number(startBalance)
-  const maxDD = Number(maxDrawdown)
+  const start = Number(startBalance || 0)
+  const maxDD = Number(maxDrawdown || 0)
   const lock = Number(lockThreshold || 0)
 
-  const sorted = [...trades].sort((a, b) =>
-    a.date.localeCompare(b.date) || (a.created_at || '').localeCompare(b.created_at || '')
-  )
+  const sorted = [...trades].sort(tradeAsc)
 
   let hwm = start
   let running = start
   for (const t of sorted) {
-    running += Number(t.pnl)
+    running += Number(t.pnl || 0)
     if (running > hwm) hwm = running
   }
 
@@ -83,34 +106,34 @@ export function calcIntradayTrailingDrawdown(startBalance, trades, maxDrawdown, 
   if (lock > 0 && hwm >= start + lock) floor = start + lock - maxDD
 
   const buffer = currentBalance - floor
-  const bufferPercent = Math.min(100, Math.max(0, (buffer / maxDD) * 100))
+  const bufferPercent = Math.min(100, Math.max(0, safePercent(buffer, maxDD)))
 
   let warningLevel = 'ok'
   if (bufferPercent <= 20) warningLevel = 'critical'
   else if (bufferPercent <= 40) warningLevel = 'warning'
 
-  return { hwm, floor, currentBalance, buffer, bufferPercent, warningLevel, breached: currentBalance <= floor }
+  return { hwm, floor, currentBalance, buffer, bufferPercent, warningLevel, breached: maxDD > 0 && currentBalance <= floor }
 }
 
 export function calcStaticDrawdown(startBalance, trades, maxDrawdown) {
-  const start = Number(startBalance)
-  const maxDD = Number(maxDrawdown)
+  const start = Number(startBalance || 0)
+  const maxDD = Number(maxDrawdown || 0)
   const currentBalance = calcCurrentBalance(start, trades)
   const floor = start - maxDD
   const buffer = currentBalance - floor
-  const bufferPercent = Math.min(100, Math.max(0, (buffer / maxDD) * 100))
+  const bufferPercent = Math.min(100, Math.max(0, safePercent(buffer, maxDD)))
 
   let warningLevel = 'ok'
   if (bufferPercent <= 20) warningLevel = 'critical'
   else if (bufferPercent <= 40) warningLevel = 'warning'
 
-  return { floor, currentBalance, buffer, bufferPercent, warningLevel, breached: currentBalance <= floor }
+  return { floor, currentBalance, buffer, bufferPercent, warningLevel, breached: maxDD > 0 && currentBalance <= floor }
 }
 
 // Builds a per-day floor series for trailing modes so the chart can draw a rising
 // floor line instead of a single flat value.  Returns null for static drawdown.
 export function buildFloorCurve(account, trades) {
-  const start = Number(account.start_balance)
+  const start = Number(account.start_balance || 0)
   const maxDD = Number(account.max_drawdown || 0)
   const lock = Number(account.drawdown_lock_threshold || 0)
   const type = account.drawdown_type
@@ -148,40 +171,51 @@ export function calcDrawdown(account, trades) {
 
 export function calcDailyLoss(account, trades) {
   const today = todayStr()
-  const todayTrades = trades.filter(t => t.date === today)
-  const todayPnL = todayTrades.reduce((s, t) => s + Number(t.pnl), 0)
-  const dailyLimit = Number(account.daily_loss_limit)
+  const todayTrades = trades.filter(t => dstr(t.date) === today)
+  const todayPnL = todayTrades.reduce((s, t) => s + Number(t.pnl || 0), 0)
+  const dailyLimit = Number(account.daily_loss_limit || 0)
 
   const usedLoss = todayPnL < 0 ? Math.abs(todayPnL) : 0
   const remaining = dailyLimit - usedLoss
-  const remainingPercent = Math.min(100, Math.max(0, (remaining / dailyLimit) * 100))
+  const remainingPercent = dailyLimit > 0
+    ? Math.min(100, Math.max(0, (remaining / dailyLimit) * 100))
+    : 100
 
   let warningLevel = 'ok'
-  if (remainingPercent <= 20) warningLevel = 'critical'
-  else if (remainingPercent <= 40) warningLevel = 'warning'
+  if (dailyLimit > 0) {
+    if (remainingPercent <= 20) warningLevel = 'critical'
+    else if (remainingPercent <= 40) warningLevel = 'warning'
+  }
 
-  return { todayPnL, usedLoss, remaining: Math.max(0, remaining), remainingPercent, warningLevel, breached: usedLoss >= dailyLimit }
+  return {
+    todayPnL,
+    usedLoss,
+    remaining: Math.max(0, remaining),
+    remainingPercent,
+    warningLevel,
+    breached: dailyLimit > 0 && usedLoss >= dailyLimit,
+  }
 }
 
 // Payout qualifying days — resets after each payout.
 // Trades strictly after lastPayout.date count toward the next cycle.
 export function calcPayoutProgress(account, trades, payouts = []) {
-  const minDaily = Number(account.pay_min_daily)
-  const required = Number(account.pay_days_required)
+  const minDaily = Number(account.pay_min_daily || 0)
+  const required = Number(account.pay_days_required || 0)
 
   // Sort by date desc, then created_at desc as tiebreaker
   const lastPayout = payouts.length > 0
     ? [...payouts].sort((a, b) => {
-        const d = String(b.date).slice(0, 10).localeCompare(String(a.date).slice(0, 10))
-        return d !== 0 ? d : (b.created_at || '').localeCompare(a.created_at || '')
+        const d = dstr(b.date).localeCompare(dstr(a.date))
+        return d !== 0 ? d : String(b.created_at || '').localeCompare(String(a.created_at || ''))
       })[0]
     : null
 
   // Normalise to YYYY-MM-DD — guards against Supabase returning DATE with time suffix
-  const cutoff = lastPayout ? String(lastPayout.date).slice(0, 10) : null
+  const cutoff = lastPayout ? dstr(lastPayout.date) : null
 
   const filteredTrades = cutoff
-    ? trades.filter(t => String(t.date).slice(0, 10) > cutoff)
+    ? trades.filter(t => dstr(t.date) > cutoff)
     : trades
 
   const dailyMap = getDailyPnLMap(filteredTrades)
@@ -191,10 +225,18 @@ export function calcPayoutProgress(account, trades, payouts = []) {
     .sort()
 
   const rawCount = qualifyingDays.length
-  const count = Math.min(rawCount, required)
+  const count = required > 0 ? Math.min(rawCount, required) : rawCount
   const progress = required > 0 ? Math.min(100, (rawCount / required) * 100) : 0
 
-  return { count, required, progress, qualifyingDays, met: rawCount >= required, lastPayout, cutoff }
+  return {
+    count,
+    required,
+    progress,
+    qualifyingDays,
+    met: required > 0 && rawCount >= required,
+    lastPayout,
+    cutoff,
+  }
 }
 
 // Consistency rule: best single day must not exceed X% of total profit
@@ -202,11 +244,12 @@ export function calcConsistency(limitPercent, trades) {
   const limit = Number(limitPercent || 0)
   if (limit === 0 || trades.length === 0) return null
 
-  const totalProfit = trades.reduce((s, t) => s + Number(t.pnl), 0)
+  const totalProfit = trades.reduce((s, t) => s + Number(t.pnl || 0), 0)
   if (totalProfit <= 0) return null
 
   const dailyMap = getDailyPnLMap(trades)
   const dailyValues = Object.values(dailyMap)
+  if (dailyValues.length === 0) return null
   const bestDay = Math.max(...dailyValues)
   if (bestDay <= 0) return null
 
@@ -225,13 +268,13 @@ export function calcConsistency(limitPercent, trades) {
 
 // EVAL: full metrics for evaluation account
 export function calcEvalMetrics(account, trades) {
-  const start = Number(account.start_balance)
+  const start = Number(account.start_balance || 0)
   const currentBalance = calcCurrentBalance(start, trades)
   const profit = currentBalance - start
   const profitTarget = Number(account.profit_target || 0)
   const profitProgress = profitTarget > 0 ? Math.min(100, Math.max(0, (profit / profitTarget) * 100)) : 0
 
-  const tradingDays = new Set(trades.map(t => t.date)).size
+  const tradingDays = new Set(trades.map(t => dstr(t.date)).filter(Boolean)).size
   const minDays = Number(account.min_trading_days || 0)
   const tradingDaysProgress = minDays > 0 ? Math.min(100, (tradingDays / minDays) * 100) : 100
 
@@ -240,9 +283,10 @@ export function calcEvalMetrics(account, trades) {
   const consistency = calcConsistency(account.consistency_limit, trades)
 
   const today = todayStr()
-  const todayPnL = trades.filter(t => t.date === today).reduce((s, t) => s + Number(t.pnl), 0)
+  const todayPnL = trades.filter(t => dstr(t.date) === today).reduce((s, t) => s + Number(t.pnl || 0), 0)
 
-  const passed = profit >= profitTarget &&
+  const passed = profitTarget > 0 &&
+    profit >= profitTarget &&
     (minDays === 0 || tradingDays >= minDays) &&
     (!consistency || !consistency.breached) &&
     !drawdown.breached
@@ -254,27 +298,27 @@ export function calcEvalMetrics(account, trades) {
     passed, failed: drawdown.breached,
     equityCurve: buildEquityCurve(start, trades),
     floorCurve: buildFloorCurve(account, trades),
-    recentTrades: [...trades].sort((a, b) => b.date.localeCompare(a.date) || b.created_at?.localeCompare(a.created_at)).slice(0, 8),
+    recentTrades: [...trades].sort(tradeDesc).slice(0, 8),
   }
 }
 
 // FUNDED: full metrics for funded account
 export function calcFundedMetrics(account, trades, payouts = []) {
-  const start = Number(account.start_balance)
+  const start = Number(account.start_balance || 0)
   const currentBalance = calcCurrentBalance(start, trades)
   const tradingProfit = currentBalance - start
-  const totalWithdrawn = payouts.reduce((s, p) => s + Number(p.amount), 0)
+  const totalWithdrawn = payouts.reduce((s, p) => s + Number(p.amount || 0), 0)
 
   const drawdown = calcDrawdown(account, trades)
   const dailyLoss = calcDailyLoss(account, trades)
   const payout = calcPayoutProgress(account, trades, payouts)
 
-  const lastPayout = payout.lastPayout
-  const tradesAfterPayout = lastPayout ? trades.filter(t => t.date > lastPayout.date) : trades
+  const cutoff = payout.cutoff
+  const tradesAfterPayout = cutoff ? trades.filter(t => dstr(t.date) > cutoff) : trades
   const consistency = calcConsistency(account.consistency_limit, tradesAfterPayout)
 
   const today = todayStr()
-  const todayPnL = trades.filter(t => t.date === today).reduce((s, t) => s + Number(t.pnl), 0)
+  const todayPnL = trades.filter(t => dstr(t.date) === today).reduce((s, t) => s + Number(t.pnl || 0), 0)
 
   const netBalance = currentBalance - totalWithdrawn
 
@@ -283,23 +327,23 @@ export function calcFundedMetrics(account, trades, payouts = []) {
     drawdown, dailyLoss, payout, consistency, todayPnL,
     equityCurve: buildEquityCurve(start, trades),
     floorCurve: buildFloorCurve(account, trades),
-    recentTrades: [...trades].sort((a, b) => b.date.localeCompare(a.date) || b.created_at?.localeCompare(a.created_at)).slice(0, 8),
+    recentTrades: [...trades].sort(tradeDesc).slice(0, 8),
   }
 }
 
 // SIMPLE: minimal metrics
 export function calcSimpleMetrics(account, trades) {
-  const start = Number(account.start_balance)
+  const start = Number(account.start_balance || 0)
   const currentBalance = calcCurrentBalance(start, trades)
   const totalPnL = currentBalance - start
   const today = todayStr()
-  const todayPnL = trades.filter(t => t.date === today).reduce((s, t) => s + Number(t.pnl), 0)
-  const tradingDays = new Set(trades.map(t => t.date)).size
+  const todayPnL = trades.filter(t => dstr(t.date) === today).reduce((s, t) => s + Number(t.pnl || 0), 0)
+  const tradingDays = new Set(trades.map(t => dstr(t.date)).filter(Boolean)).size
 
   return {
     currentBalance, totalPnL, todayPnL, tradingDays,
     equityCurve: buildEquityCurve(start, trades),
-    recentTrades: [...trades].sort((a, b) => b.date.localeCompare(a.date) || b.created_at?.localeCompare(a.created_at)).slice(0, 8),
+    recentTrades: [...trades].sort(tradeDesc).slice(0, 8),
   }
 }
 
@@ -307,15 +351,16 @@ export function calcSimpleMetrics(account, trades) {
 export function calcTradeStats(trades) {
   if (!trades.length) return null
 
-  const winners = trades.filter(t => Number(t.pnl) > 0)
-  const losers = trades.filter(t => Number(t.pnl) < 0)
-  const breakEvens = trades.filter(t => Number(t.pnl) === 0)
+  const winners = trades.filter(t => Number(t.pnl || 0) > 0)
+  const losers = trades.filter(t => Number(t.pnl || 0) < 0)
+  const breakEvens = trades.filter(t => Number(t.pnl || 0) === 0)
 
-  const grossWin = winners.reduce((s, t) => s + Number(t.pnl), 0)
-  const grossLoss = Math.abs(losers.reduce((s, t) => s + Number(t.pnl), 0))
+  const grossWin = winners.reduce((s, t) => s + Number(t.pnl || 0), 0)
+  const grossLoss = Math.abs(losers.reduce((s, t) => s + Number(t.pnl || 0), 0))
 
   const winRate = (winners.length + losers.length) > 0 ? (winners.length / (winners.length + losers.length)) * 100 : 0
-  const profitFactor = grossLoss > 0 ? grossWin / grossLoss : grossWin > 0 ? Infinity : 0
+  // Profit factor: null when undefined (no losses yet) — UI renders "∞" or "—" as appropriate
+  const profitFactor = grossLoss > 0 ? grossWin / grossLoss : null
   const avgWin = winners.length > 0 ? grossWin / winners.length : 0
   const avgLoss = losers.length > 0 ? grossLoss / losers.length : 0
 
@@ -327,26 +372,24 @@ export function calcTradeStats(trades) {
   const bestDay = dailyPnLs.length ? Math.max(...dailyPnLs) : 0
   const worstDay = dailyPnLs.length ? Math.min(...dailyPnLs) : 0
 
-  const rValues = trades.filter(t => t.r_value !== null && t.r_value !== undefined)
+  const rValues = trades.filter(t => t.r_value !== null && t.r_value !== undefined && Number.isFinite(Number(t.r_value)))
   const rExpectancy = rValues.length > 0
     ? rValues.reduce((s, t) => s + Number(t.r_value), 0) / rValues.length
     : null
 
   // Largest single trade win/loss
-  const largestWin  = winners.length > 0 ? Math.max(...winners.map(t => Number(t.pnl))) : 0
-  const largestLoss = losers.length  > 0 ? Math.abs(Math.min(...losers.map(t => Number(t.pnl)))) : 0
+  const largestWin  = winners.length > 0 ? Math.max(...winners.map(t => Number(t.pnl || 0))) : 0
+  const largestLoss = losers.length  > 0 ? Math.abs(Math.min(...losers.map(t => Number(t.pnl || 0)))) : 0
 
   // Avg trade net PnL (all trades incl. BE)
   const avgTrade = trades.length > 0 ? (grossWin - grossLoss) / trades.length : 0
 
   // Win/loss streaks — sort trades chronologically
-  const sorted = [...trades].sort((a, b) =>
-    a.date.localeCompare(b.date) || (a.created_at || '').localeCompare(b.created_at || '')
-  )
+  const sorted = [...trades].sort(tradeAsc)
   let maxWinStreak = 0, maxLossStreak = 0
   let curWin = 0, curLoss = 0
   for (const t of sorted) {
-    const p = Number(t.pnl)
+    const p = Number(t.pnl || 0)
     if (p > 0) {
       curWin++; curLoss = 0
       if (curWin > maxWinStreak) maxWinStreak = curWin
@@ -360,7 +403,7 @@ export function calcTradeStats(trades) {
   // Max drawdown from running equity (trade-level, not day-level)
   let peak = 0, running = 0, maxDrawdown = 0
   for (const t of sorted) {
-    running += Number(t.pnl)
+    running += Number(t.pnl || 0)
     if (running > peak) peak = running
     const dd = peak - running
     if (dd > maxDrawdown) maxDrawdown = dd
@@ -371,7 +414,7 @@ export function calcTradeStats(trades) {
     const s = t.session || 'Other'
     if (!sessionMap[s]) sessionMap[s] = { count: 0, pnl: 0 }
     sessionMap[s].count++
-    sessionMap[s].pnl += Number(t.pnl)
+    sessionMap[s].pnl += Number(t.pnl || 0)
   }
 
   const instrumentMap = {}
@@ -379,7 +422,7 @@ export function calcTradeStats(trades) {
     const i = t.instrument || 'Other'
     if (!instrumentMap[i]) instrumentMap[i] = { count: 0, pnl: 0 }
     instrumentMap[i].count++
-    instrumentMap[i].pnl += Number(t.pnl)
+    instrumentMap[i].pnl += Number(t.pnl || 0)
   }
 
   return {

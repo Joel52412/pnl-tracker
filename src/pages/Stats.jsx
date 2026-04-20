@@ -179,10 +179,10 @@ export default function Stats() {
         />
         <StatCard
           label="Profit Factor"
-          value={s.profitFactor === Infinity ? '∞' : s.profitFactor.toFixed(2)}
+          value={s.profitFactor === null ? (s.grossWin > 0 ? '∞' : '—') : s.profitFactor.toFixed(2)}
           sub={`${formatCurrency(s.grossWin, 0)} gross win`}
           icon={Award}
-          accent={s.profitFactor >= 1.5 ? 'bg-emerald-500/10' : 'bg-amber-500/10'}
+          accent={s.profitFactor !== null && s.profitFactor >= 1.5 ? 'bg-emerald-500/10' : 'bg-amber-500/10'}
         />
         <StatCard
           label="Avg Trade"

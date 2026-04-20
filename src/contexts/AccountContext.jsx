@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthContext'
 
@@ -13,29 +13,51 @@ export function AccountProvider({ children }) {
   const [loadingAccounts, setLoadingAccounts] = useState(true)
   const [loadingTrades, setLoadingTrades] = useState(false)
 
+  // Guards against stale async responses overwriting fresh state when the user
+  // switches accounts or signs out mid-flight.
+  const currentUserIdRef = useRef(null)
+  const currentAccountIdRef = useRef(null)
+
   const fetchAccounts = useCallback(async () => {
-    if (!user) return
+    if (!user) return []
     setLoadingAccounts(true)
-    const { data, error } = await supabase
-      .from('accounts')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: true })
-    if (!error) setAccounts(data || [])
-    setLoadingAccounts(false)
-    return data
+    const requestUserId = user.id
+    try {
+      const { data, error } = await supabase
+        .from('accounts')
+        .select('*')
+        .eq('user_id', requestUserId)
+        .order('created_at', { ascending: true })
+      if (currentUserIdRef.current !== requestUserId) return data || []
+      if (error) {
+        console.error('fetchAccounts failed:', error)
+        return []
+      }
+      setAccounts(data || [])
+      return data || []
+    } finally {
+      if (currentUserIdRef.current === requestUserId) setLoadingAccounts(false)
+    }
   }, [user])
 
   const fetchTrades = useCallback(async (accountId) => {
     if (!accountId) return
     setLoadingTrades(true)
-    const { data, error } = await supabase
-      .from('trades')
-      .select('*')
-      .eq('account_id', accountId)
-      .order('date', { ascending: false })
-    if (!error) setTrades(data || [])
-    setLoadingTrades(false)
+    try {
+      const { data, error } = await supabase
+        .from('trades')
+        .select('*')
+        .eq('account_id', accountId)
+        .order('date', { ascending: false })
+      if (currentAccountIdRef.current !== accountId) return
+      if (error) {
+        console.error('fetchTrades failed:', error)
+        return
+      }
+      setTrades(data || [])
+    } finally {
+      if (currentAccountIdRef.current === accountId) setLoadingTrades(false)
+    }
   }, [])
 
   const fetchPayouts = useCallback(async (accountId) => {
@@ -45,25 +67,37 @@ export function AccountProvider({ children }) {
       .select('*')
       .eq('account_id', accountId)
       .order('date', { ascending: false })
-    if (!error) setPayouts(data || [])
+    if (currentAccountIdRef.current !== accountId) return
+    if (error) {
+      console.error('fetchPayouts failed:', error)
+      return
+    }
+    setPayouts(data || [])
   }, [])
 
   useEffect(() => {
+    currentUserIdRef.current = user?.id || null
     if (!user) {
+      currentAccountIdRef.current = null
       setAccounts([]); setSelectedAccountState(null); setTrades([]); setPayouts([])
       setLoadingAccounts(false); return
     }
     fetchAccounts().then(data => {
+      if (currentUserIdRef.current !== user.id) return
       if (data?.length) {
         const saved = localStorage.getItem(`pnl_account_${user.id}`)
         const found = saved ? data.find(a => a.id === saved) : null
         setSelectedAccountState(found || data[0])
+      } else {
+        setSelectedAccountState(null)
       }
     })
   }, [user, fetchAccounts])
 
   useEffect(() => {
+    currentAccountIdRef.current = selectedAccount?.id || null
     if (selectedAccount) {
+      setTrades([]); setPayouts([])
       fetchTrades(selectedAccount.id)
       fetchPayouts(selectedAccount.id)
     } else {
@@ -105,32 +139,56 @@ export function AccountProvider({ children }) {
   async function deleteProfile() {
     const { error } = await supabase.rpc('delete_user')
     if (error) throw error
+    // Clear local state defensively before sign-out so the UI doesn't flash
+    // stale data during the auth round-trip.
+    setAccounts([]); setSelectedAccountState(null); setTrades([]); setPayouts([])
     await supabase.auth.signOut()
   }
 
   async function addTrade(tradeData) {
-    const { error } = await supabase
+    if (!selectedAccount) throw new Error('No account selected')
+    const { data: created, error } = await supabase
       .from('trades')
       .insert({ ...tradeData, account_id: selectedAccount.id, user_id: user.id })
+      .select()
+      .single()
     if (error) throw error
-    await fetchTrades(selectedAccount.id)
+    // Optimistically prepend — fetchTrades below reconciles
+    if (created) setTrades(prev => [created, ...prev])
+    fetchTrades(selectedAccount.id)
   }
 
   async function deleteTrade(id) {
+    if (!selectedAccount) throw new Error('No account selected')
+    // Optimistic remove
+    const prev = trades
+    setTrades(p => p.filter(t => t.id !== id))
     const { error } = await supabase.from('trades').delete().eq('id', id)
-    if (error) throw error
-    await fetchTrades(selectedAccount.id)
+    if (error) {
+      setTrades(prev)
+      throw error
+    }
+    fetchTrades(selectedAccount.id)
   }
 
   async function updateTrade(id, data) {
+    if (!selectedAccount) throw new Error('No account selected')
     const { error } = await supabase.from('trades').update(data).eq('id', id)
     if (error) throw error
     await fetchTrades(selectedAccount.id)
   }
 
   async function addPayout(data) {
+    if (!selectedAccount) throw new Error('No account selected')
     // Optimistic update — reset qualifying day counter immediately
-    const optimistic = { id: 'optimistic', ...data, account_id: selectedAccount.id, user_id: user.id, created_at: new Date().toISOString() }
+    const tempId = `optimistic-${Date.now()}`
+    const optimistic = {
+      id: tempId,
+      ...data,
+      account_id: selectedAccount.id,
+      user_id: user.id,
+      created_at: new Date().toISOString(),
+    }
     setPayouts(prev => [optimistic, ...prev])
     const { data: created, error } = await supabase
       .from('payouts')
@@ -138,12 +196,24 @@ export function AccountProvider({ children }) {
       .select()
       .single()
     if (error) {
-      setPayouts(prev => prev.filter(p => p.id !== 'optimistic'))
+      setPayouts(prev => prev.filter(p => p.id !== tempId))
       throw error
     }
     // Replace optimistic with the real DB record — avoids stale read-replica lag
-    setPayouts(prev => [created, ...prev.filter(p => p.id !== 'optimistic')])
+    setPayouts(prev => [created, ...prev.filter(p => p.id !== tempId)])
     // Background sync to pick up any server-side changes
+    fetchPayouts(selectedAccount.id)
+  }
+
+  async function deletePayout(id) {
+    if (!selectedAccount) throw new Error('No account selected')
+    const prev = payouts
+    setPayouts(p => p.filter(x => x.id !== id))
+    const { error } = await supabase.from('payouts').delete().eq('id', id)
+    if (error) {
+      setPayouts(prev)
+      throw error
+    }
     fetchPayouts(selectedAccount.id)
   }
 
@@ -156,7 +226,7 @@ export function AccountProvider({ children }) {
       fetchPayouts: () => fetchPayouts(selectedAccount?.id),
       createAccount, updateAccount, deleteAccount, deleteProfile,
       addTrade, deleteTrade, updateTrade,
-      addPayout,
+      addPayout, deletePayout,
     }}>
       {children}
     </AccountContext.Provider>

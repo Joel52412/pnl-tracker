@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAccount } from '../contexts/AccountContext'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
-import { formatDate, pnlClass } from '../utils/formatters'
+import { pnlClass } from '../utils/formatters'
 import { useMoney } from '../contexts/HideContext'
 import { getDailyPnLMap } from '../utils/calculations'
 import { format } from 'date-fns'
@@ -250,37 +250,56 @@ export default function Journal() {
   const dailyMap = getDailyPnLMap(trades)
 
   const fetchJournals = useCallback(async () => {
-    if (!selectedAccount) return
+    if (!selectedAccount) { setJournals([]); return }
     setLoading(true)
-    const { data } = await supabase
-      .from('journals')
-      .select('*')
-      .eq('account_id', selectedAccount.id)
-      .order('date', { ascending: false })
-    setJournals(data || [])
-    setLoading(false)
+    try {
+      const { data, error } = await supabase
+        .from('journals')
+        .select('*')
+        .eq('account_id', selectedAccount.id)
+        .order('date', { ascending: false })
+      if (error) {
+        console.error('Failed to load journals:', error)
+        return
+      }
+      // Normalise date to YYYY-MM-DD so lookups are consistent everywhere
+      setJournals((data || []).map(j => ({ ...j, date: String(j.date || '').slice(0, 10) })))
+    } finally {
+      setLoading(false)
+    }
   }, [selectedAccount])
 
-  useEffect(() => { fetchJournals() }, [fetchJournals])
+  useEffect(() => {
+    setJournals([])
+    fetchJournals()
+  }, [fetchJournals])
 
-  // Handle ?date= param from calendar links
+  // Handle ?date= param from calendar links. Only read the URL once on mount —
+  // re-running on every journals update would reopen the modal after each save.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const d = params.get('date')
     if (d) {
-      const existing = journals.find(j => j.date === d)
-      setEditEntry(existing || {})
+      setEditEntry({})
       setEditDate(d)
-      // Clean URL without reload
       window.history.replaceState({}, '', '/journal')
     }
-  }, [journals])
+  }, [])
+
+  // Once journals load, swap in the existing entry if one matches the prefilled date
+  useEffect(() => {
+    if (editDate && editEntry && !editEntry.id) {
+      const existing = journals.find(j => j.date === editDate)
+      if (existing) setEditEntry(existing)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [journals, editDate])
 
   const filtered = journals.filter(j => {
     if (!search) return true
     const q = search.toLowerCase()
     return (
-      j.date.includes(q) ||
+      (j.date || '').includes(q) ||
       j.premarket?.toLowerCase().includes(q) ||
       j.postmarket?.toLowerCase().includes(q) ||
       j.mindset?.toLowerCase().includes(q) ||
@@ -289,9 +308,16 @@ export default function Journal() {
   })
 
   async function handleDelete(id) {
-    await supabase.from('journals').delete().eq('id', id)
-    setDeleteId(null)
-    fetchJournals()
+    try {
+      const { error } = await supabase.from('journals').delete().eq('id', id)
+      if (error) throw error
+      fetchJournals()
+    } catch (err) {
+      console.error('Failed to delete journal:', err)
+      alert(`Failed to delete entry: ${err.message || err}`)
+    } finally {
+      setDeleteId(null)
+    }
   }
 
   function openNew() {

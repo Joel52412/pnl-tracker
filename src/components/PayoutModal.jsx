@@ -11,16 +11,16 @@ export default function PayoutModal({ account, onClose }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const min = Number(account.pay_min_request)
-  const max = Number(account.pay_max_request)
+  const min = Number(account.pay_min_request) || 0
+  const max = Number(account.pay_max_request) || 0
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
     const val = Number(amount)
-    if (!val || val <= 0) { setError('Enter a valid amount.'); return }
-    if (val < min) { setError(`Minimum payout is ${formatCurrency(min)}.`); return }
-    if (val > max) { setError(`Maximum payout is ${formatCurrency(max)}.`); return }
+    if (!Number.isFinite(val) || val <= 0) { setError('Enter a valid amount.'); return }
+    if (min > 0 && val < min) { setError(`Minimum payout is ${formatCurrency(min)}.`); return }
+    if (max > 0 && val > max) { setError(`Maximum payout is ${formatCurrency(max)}.`); return }
 
     setLoading(true)
     try {

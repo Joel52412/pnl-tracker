@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAccount } from '../contexts/AccountContext'
-import { useAuth } from '../contexts/AuthContext'
-import { formatCurrency, pnlClass } from '../utils/formatters'
+import { pnlClass } from '../utils/formatters'
 import { useMoney } from '../contexts/HideContext'
 import AddTradeModal from '../components/AddTradeModal'
 import { ChevronLeft, ChevronRight, BookText, X, Plus, TrendingUp, TrendingDown, Minus } from 'lucide-react'
@@ -44,7 +43,6 @@ function pnlTextClass(pnl) {
 
 export default function Calendar() {
   const { trades, selectedAccount } = useAccount()
-  const { user } = useAuth()
   const fmt = useMoney()
 
   const [viewDate, setViewDate] = useState(new Date())
@@ -53,18 +51,28 @@ export default function Calendar() {
   const [journals, setJournals] = useState({})
 
   useEffect(() => {
+    // Clear journals immediately on account switch to avoid showing stale data
+    setJournals({})
+    setSelectedDate(null)
     if (!selectedAccount) return
+    let cancelled = false
     supabase
       .from('journals')
       .select('*')
       .eq('account_id', selectedAccount.id)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) {
+          console.error('Failed to load journals:', error)
+          return
+        }
         if (data) {
           const map = {}
-          data.forEach(j => { map[j.date] = j })
+          data.forEach(j => { map[String(j.date).slice(0, 10)] = j })
           setJournals(map)
         }
       })
+    return () => { cancelled = true }
   }, [selectedAccount])
 
   function prevMonth() { setViewDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1)) }
@@ -73,13 +81,21 @@ export default function Calendar() {
 
   const dailyPnL = useMemo(() => {
     const map = {}
-    trades.forEach(t => { map[t.date] = (map[t.date] || 0) + Number(t.pnl) })
+    trades.forEach(t => {
+      const d = String(t.date || '').slice(0, 10)
+      if (!d) return
+      map[d] = (map[d] || 0) + Number(t.pnl || 0)
+    })
     return map
   }, [trades])
 
   const dailyCount = useMemo(() => {
     const map = {}
-    trades.forEach(t => { map[t.date] = (map[t.date] || 0) + 1 })
+    trades.forEach(t => {
+      const d = String(t.date || '').slice(0, 10)
+      if (!d) return
+      map[d] = (map[d] || 0) + 1
+    })
     return map
   }, [trades])
 
@@ -100,7 +116,7 @@ export default function Calendar() {
   const lossDays    = monthPnLs.filter(v => v < 0).length
   const maxAbs      = monthPnLs.length > 0 ? Math.max(...monthPnLs.map(Math.abs)) : 1
 
-  const selectedTrades  = selectedDate ? trades.filter(t => t.date === selectedDate) : []
+  const selectedTrades  = selectedDate ? trades.filter(t => String(t.date || '').slice(0, 10) === selectedDate) : []
   const selectedJournal = selectedDate ? journals[selectedDate] : null
   const selectedPnL     = selectedDate != null ? dailyPnL[selectedDate] : undefined
   const selectedWeekIdx = selectedDate
