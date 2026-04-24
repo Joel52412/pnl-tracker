@@ -13,13 +13,15 @@ import {
 } from 'lucide-react'
 import { format } from 'date-fns'
 
-const BROKERS = ['NinjaTrader', 'Tradovate', 'MT5 Toolbox', 'MT5 MQL5']
+const BROKERS = ['NinjaTrader', 'Tradovate', 'MT5 Toolbox', 'MT5 MQL5', 'MNQ Logger', 'Custom']
 
 const BROKER_COLORS = {
   NinjaTrader:  'badge-blue',
   Tradovate:    'badge-green',
   'MT5 Toolbox': 'badge-amber',
   'MT5 MQL5':    'badge-amber',
+  'MNQ Logger':  'badge-purple',
+  Custom:        'badge-gray',
 }
 
 const BROKER_DESCRIPTIONS = {
@@ -27,6 +29,8 @@ const BROKER_DESCRIPTIONS = {
   Tradovate:    'Trade History — boughtTimestamp format',
   'MT5 Toolbox': 'Toolbox History tab export (Profit/Loss col)',
   'MT5 MQL5':    'MQL5 script export (Swap + Type cols)',
+  'MNQ Logger':  'MNQ Logger backtest overlay export',
+  Custom:        'Clean format: Date, PnL, Session, Outcome, R Value, Notes',
 }
 
 export default function Import() {

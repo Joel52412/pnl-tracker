@@ -48,6 +48,8 @@ export function parseCSVText(text) {
 //   'Tradovate'     — Tradovate trade history (boughtTimestamp/soldTimestamp)
 //   'MT5 Toolbox'   — MT5 Toolbox History tab export (Profit/Loss column)
 //   'MT5 MQL5'      — MT5 MQL5 script export (Swap + Type columns)
+//   'MNQ Logger'    — MNQ Logger backtest overlay export
+//   'Custom'        — Clean generic format from backtest_tracker _pnl export
 
 export function detectBroker(headers) {
   const lc = new Set(headers.map(h => h.toLowerCase().trim()))
@@ -56,6 +58,8 @@ export function detectBroker(headers) {
   if (lc.has('boughttimestamp') || lc.has('soldtimestamp')) return 'Tradovate'
   if (lc.has('profit/loss') && lc.has('open time')) return 'MT5 Toolbox'
   if (lc.has('swap') && lc.has('open time') && lc.has('close time')) return 'MT5 MQL5'
+  if (lc.has('trade#') && lc.has('pnl$'))         return 'MNQ Logger'
+  if (lc.has('date') && lc.has('pnl') && lc.has('outcome')) return 'Custom'
 
   return null
 }
@@ -283,6 +287,98 @@ export function parseMT5MQL5(rows) {
   return trades
 }
 
+// ─── MNQ Logger / Backtest Tracker ────────────────────────────────────────────
+// Columns: Trade#, Date, Session, Zone, Type, HTF, Risk$, R:R, Outcome, PnL$, Cum$
+// Summary rows (blank Trade# or PnL$) are skipped.
+
+export function parseBacktestTracker(rows) {
+  const trades = []
+  const sessionMap = {
+    'LDN': 'London',
+    'NY': 'NY',
+  }
+  for (const row of rows) {
+    const pnlStr = row['PnL$']?.trim()
+    const outcomeStr = row['Outcome']?.trim()
+    if (!pnlStr && !outcomeStr) continue   // skip summary rows
+
+    const pnl = safeNumRequired(pnlStr)
+    if (pnl === null) continue
+
+    const rawDate = row['Date']?.trim()
+    if (!rawDate) continue
+
+    // Support M/D/YYYY or YYYY-MM-DD
+    let date = rawDate
+    const parts = rawDate.split('/')
+    if (parts.length === 3) {
+      const m = String(parts[0]).padStart(2, '0')
+      const d = String(parts[1]).padStart(2, '0')
+      const y = String(parts[2])
+      date = `${y}-${m}-${d}`
+    }
+
+    const rawSession = row['Session']?.trim() || ''
+    const session = sessionMap[rawSession] || rawSession || null
+
+    const outcome = outcomeStr?.toUpperCase() || null
+    const rValue = safeNum(row['R:R'], null)
+
+    const zone = row['Zone']?.trim()
+    const type = row['Type']?.trim()
+    const htf = row['HTF']?.trim()
+    const notes = [zone, type, htf].filter(Boolean).join(' / ') || null
+
+    trades.push({
+      date,
+      pnl: round2(pnl),
+      instrument: 'MNQ',
+      session,
+      r_value: rValue,
+      notes,
+      outcome: outcome && ['WIN', 'LOSS', 'BE'].includes(outcome) ? outcome : null,
+    })
+  }
+  return trades
+}
+
+// ─── Custom / Clean Format ────────────────────────────────────────────────────
+// Columns: Date, PnL, Instrument, Session, Outcome, R Value, Notes
+// Produced by backtest_tracker.py "_pnl" export.
+
+export function parseCustom(rows) {
+  const trades = []
+  for (const row of rows) {
+    const pnlStr = row['PnL']?.trim()
+    if (!pnlStr) continue
+    const pnl = safeNumRequired(pnlStr)
+    if (pnl === null) continue
+
+    const dateStr = row['Date']?.trim()
+    if (!dateStr) continue
+
+    const d = parseDateTime(dateStr)
+    const date = d ? toLocalDateStr(d) : dateStr
+
+    const session = row['Session']?.trim() || null
+    const outcome = row['Outcome']?.trim().toUpperCase() || null
+    const rValue = safeNum(row['R Value'], null)
+    const instrument = row['Instrument']?.trim() || null
+    const notes = row['Notes']?.trim() || null
+
+    trades.push({
+      date,
+      pnl: round2(pnl),
+      instrument: instrument ? cleanInstrument(instrument) : null,
+      session,
+      r_value: rValue,
+      notes,
+      outcome: outcome && ['WIN', 'LOSS', 'BE'].includes(outcome) ? outcome : null,
+    })
+  }
+  return trades
+}
+
 // ─── Dispatch ─────────────────────────────────────────────────────────────────
 
 export function parseTrades(rows, broker) {
@@ -291,6 +387,8 @@ export function parseTrades(rows, broker) {
     case 'Tradovate':   return parseTradovate(rows)
     case 'MT5 Toolbox': return parseMT5Toolbox(rows)
     case 'MT5 MQL5':    return parseMT5MQL5(rows)
+    case 'MNQ Logger':  return parseBacktestTracker(rows)
+    case 'Custom':      return parseCustom(rows)
     default:            return []
   }
 }
