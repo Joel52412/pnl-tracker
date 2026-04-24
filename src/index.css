@@ -195,12 +195,8 @@
   }
 
   /* ── PnL colors, no glow ─────────────────────────────── */
-  .pnl-pos {
-    color: #3FB950;
-  }
-  .pnl-neg {
-    color: #F85149;
-  }
+  .pnl-pos { color: #3FB950; }
+  .pnl-neg { color: #F85149; }
   .pnl-zero { color: #484F58; }
 
   /* ── Badges, flat ──────────────────────────────────────────────────── */
@@ -238,6 +234,11 @@
     background: transparent;
     color: #A5A0FF;
     border: 1px solid #3D37A8;
+  }
+  .badge-gray {
+    background: transparent;
+    color: #8B949E;
+    border: 1px solid #484F58;
   }
 
   /* ── Progress bars, flat ───────────────────────────────────────────── */

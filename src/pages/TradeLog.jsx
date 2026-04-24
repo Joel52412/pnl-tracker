@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAccount } from '../contexts/AccountContext'
-import { formatCurrency, formatDate, pnlClass, pnlBg } from '../utils/formatters'
+import { formatCurrency, formatDate, pnlClass } from '../utils/formatters'
 import AddTradeModal from '../components/AddTradeModal'
 import {
   Plus, Trash2, Search, Filter, ChevronUp, ChevronDown, AlertTriangle,
@@ -28,13 +28,15 @@ export default function TradeLog() {
       if (sessionFilter !== 'All' && t.session !== sessionFilter) return false
       if (instrumentSearch && !t.instrument?.toLowerCase().includes(instrumentSearch.toLowerCase())) return false
       if (search) {
-        const q = search.toLowerCase()
+        const q = search.toLowerCase().trim()
         const dateStr = String(t.date || '').slice(0, 10)
+        // Exact pnl match: require the query to be a number and match closely
+        const pnlMatch = !isNaN(Number(q)) && Math.abs(Number(t.pnl) - Number(q)) < 0.01
         if (
           !dateStr.includes(q) &&
           !t.instrument?.toLowerCase().includes(q) &&
           !t.notes?.toLowerCase().includes(q) &&
-          !String(t.pnl ?? '').includes(q) &&
+          !pnlMatch &&
           !(t.outcome && t.outcome.toLowerCase().includes(q))
         ) return false
       }

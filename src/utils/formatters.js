@@ -22,13 +22,18 @@ export function formatR(value) {
   return `${n >= 0 ? '+' : ''}${n.toFixed(2)}R`
 }
 
+// Use UTC-safe parsing to avoid off-by-one timezone shifts
 export function formatDate(dateStr) {
   if (!dateStr) return '—'
   const s = String(dateStr).slice(0, 10)
   const [year, month, day] = s.split('-')
   if (!year || !month || !day) return '—'
-  return new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString('en-US', {
+  // Validate numbers
+  const y = Number(year), m = Number(month), d = Number(day)
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return '—'
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric',
+    timeZone: 'UTC',
   })
 }
 
@@ -37,8 +42,11 @@ export function formatDateShort(dateStr) {
   const s = String(dateStr).slice(0, 10)
   const [year, month, day] = s.split('-')
   if (!year || !month || !day) return '—'
-  return new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString('en-US', {
+  const y = Number(year), m = Number(month), d = Number(day)
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return '—'
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric',
+    timeZone: 'UTC',
   })
 }
 

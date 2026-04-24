@@ -1,41 +1,12 @@
-import { useState } from 'react'
-import { Eye, EyeOff, Plus, Shield, Clock, Target, Calendar, TrendingUp, TrendingDown, CheckCircle2, XCircle, AlertTriangle, Maximize2, Minimize2 } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Eye, EyeOff, Plus, Shield, Clock, Target, Calendar, CheckCircle2, XCircle, AlertTriangle, Maximize2, Minimize2 } from 'lucide-react'
 import { calcEvalMetrics, todayStr } from '../utils/calculations'
-import { formatCurrency, formatDate, pnlClass } from '../utils/formatters'
+import { formatDate, pnlClass } from '../utils/formatters'
 import { useMoney, useHide } from '../contexts/HideContext'
 import { useAccount } from '../contexts/AccountContext'
 import EquityCurveChart from './EquityCurveChart'
 import AddTradeModal from './AddTradeModal'
-
-// Gradient progress bar
-const GRADIENTS = {
-  ok:       'linear-gradient(90deg, #00d395, #00b8a9)',
-  warning:  'linear-gradient(90deg, #f5a623, #f79433)',
-  critical: 'linear-gradient(90deg, #ff4757, #ff6b7a)',
-}
-function ProgressBar({ percent, warningLevel = 'ok' }) {
-  return (
-    <div className="progress-bar-track">
-      <div
-        className="h-full rounded-full transition-all duration-500"
-        style={{ width: `${Math.max(2, percent)}%`, background: GRADIENTS[warningLevel] || GRADIENTS.ok }}
-      />
-    </div>
-  )
-}
-
-function WarnBanner({ message, type }) {
-  const styles = {
-    warning:  { background: 'rgba(245,166,35,0.08)', border: '1px solid rgba(245,166,35,0.25)', color: '#f5a623' },
-    critical: { background: 'rgba(255,71,87,0.08)', border: '1px solid rgba(255,71,87,0.25)', color: '#ff4757' },
-    breach:   { background: 'rgba(255,71,87,0.12)', border: '1px solid rgba(255,71,87,0.4)', color: '#ff4757' },
-  }
-  return (
-    <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm" style={styles[type]}>
-      <AlertTriangle className="w-4 h-4 shrink-0" />{message}
-    </div>
-  )
-}
+import { ProgressBar, WarnBanner } from './Shared'
 
 export default function DashEval() {
   const [showAdd, setShowAdd] = useState(false)
@@ -43,17 +14,21 @@ export default function DashEval() {
   const { hidden, toggle } = useHide()
   const { selectedAccount: account, trades } = useAccount()
   const fmt = useMoney()
-  const m = calcEvalMetrics(account, trades)
+
+  const m = useMemo(() => calcEvalMetrics(account, trades), [account, trades])
   const today = todayStr()
   const todayTradeCount = trades.filter(t => t.date === today).length
 
-  const alerts = []
-  if (m.failed) alerts.push({ type: 'breach', msg: 'ACCOUNT FAILED — Drawdown floor was hit.' })
-  else if (m.drawdown.warningLevel === 'critical') alerts.push({ type: 'critical', msg: `Drawdown critical — ${fmt(m.drawdown.buffer)} remaining` })
-  else if (m.drawdown.warningLevel === 'warning') alerts.push({ type: 'warning', msg: `Drawdown warning — ${fmt(m.drawdown.buffer)} buffer remaining` })
-  if (m.dailyLoss.breached) alerts.push({ type: 'breach', msg: 'DAILY LOSS LIMIT HIT — Stop trading today!' })
-  else if (m.dailyLoss.warningLevel === 'critical') alerts.push({ type: 'critical', msg: `Daily limit critical — ${fmt(m.dailyLoss.remaining)} remaining` })
-  else if (m.dailyLoss.warningLevel === 'warning') alerts.push({ type: 'warning', msg: `Daily limit warning — ${fmt(m.dailyLoss.remaining)} remaining today` })
+  const alerts = useMemo(() => {
+    const list = []
+    if (m.failed) list.push({ type: 'breach', msg: 'ACCOUNT FAILED — Drawdown floor was hit.' })
+    else if (m.drawdown.warningLevel === 'critical') list.push({ type: 'critical', msg: `Drawdown critical — ${fmt(m.drawdown.buffer)} remaining` })
+    else if (m.drawdown.warningLevel === 'warning') list.push({ type: 'warning', msg: `Drawdown warning — ${fmt(m.drawdown.buffer)} buffer remaining` })
+    if (m.dailyLoss.breached) list.push({ type: 'breach', msg: 'DAILY LOSS LIMIT HIT — Stop trading today!' })
+    else if (m.dailyLoss.warningLevel === 'critical') list.push({ type: 'critical', msg: `Daily limit critical — ${fmt(m.dailyLoss.remaining)} remaining` })
+    else if (m.dailyLoss.warningLevel === 'warning') list.push({ type: 'warning', msg: `Daily limit warning — ${fmt(m.dailyLoss.remaining)} remaining today` })
+    return list
+  }, [m, fmt])
 
   return (
     <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto">

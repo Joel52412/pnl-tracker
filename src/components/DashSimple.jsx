@@ -1,12 +1,11 @@
-import { useState } from 'react'
-import { TrendingUp, TrendingDown, Zap, Eye, EyeOff, Plus, Maximize2, Minimize2 } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { TrendingUp, TrendingDown, Eye, EyeOff, Plus, Maximize2, Minimize2 } from 'lucide-react'
 import { calcSimpleMetrics } from '../utils/calculations'
-import { formatCurrency, pnlClass } from '../utils/formatters'
+import { formatDate, formatCurrency, pnlClass } from '../utils/formatters'
 import { useMoney, useHide } from '../contexts/HideContext'
 import { useAccount } from '../contexts/AccountContext'
 import EquityCurveChart from './EquityCurveChart'
 import AddTradeModal from './AddTradeModal'
-import { formatDate } from '../utils/formatters'
 
 export default function DashSimple() {
   const [showAdd, setShowAdd] = useState(false)
@@ -14,7 +13,7 @@ export default function DashSimple() {
   const { hidden, toggle } = useHide()
   const { selectedAccount: account, trades } = useAccount()
   const fmt = useMoney()
-  const m = calcSimpleMetrics(account, trades)
+  const m = useMemo(() => calcSimpleMetrics(account, trades), [account, trades])
 
   const gainPct = account.start_balance > 0
     ? ((m.currentBalance - Number(account.start_balance)) / Number(account.start_balance) * 100).toFixed(2)
@@ -60,7 +59,14 @@ export default function DashSimple() {
         <div className="card p-4">
           <div className="flex items-start justify-between mb-2">
             <span className="stat-label">Today</span>
-            <Zap style={{ width: 16, height: 16, color: m.todayPnL >= 0 ? '#60a5fa' : '#ff4757' }} />
+            <div style={{
+              width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: m.todayPnL >= 0 ? 'rgba(0,211,149,0.1)' : 'rgba(255,71,87,0.1)',
+            }}>
+              {m.todayPnL >= 0
+                ? <TrendingUp style={{ width: 16, height: 16, color: '#00d395' }} />
+                : <TrendingDown style={{ width: 16, height: 16, color: '#ff4757' }} />}
+            </div>
           </div>
           <div className={`stat-value ${pnlClass(m.todayPnL)}`}>{fmt(m.todayPnL)}</div>
         </div>

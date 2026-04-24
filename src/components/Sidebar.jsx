@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
-import { LayoutDashboard, BookOpen, CalendarDays, BarChart3, TrendingUp, LogOut, Plus, ChevronDown, Settings, BookText, Upload, UserCircle } from 'lucide-react'
+import { LayoutDashboard, BookOpen, CalendarDays, BarChart3, LogOut, Plus, ChevronDown, Settings, BookText, Upload } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useAccount } from '../contexts/AccountContext'
 import { useState } from 'react'
@@ -25,11 +25,15 @@ export default function Sidebar({ onClose }) {
   const [showSettings, setShowSettings] = useState(false)
 
   async function handleSignOut() {
-    await signOut()
-    navigate('/login')
+    try {
+      await signOut()
+      navigate('/login')
+    } catch {
+      navigate('/login')
+    }
   }
 
-  // Calculate today's PnL from actual trades (accounts table doesn't have these columns)
+  // Calculate today's PnL from actual trades
   const todayStr = new Intl.DateTimeFormat('en-CA').format(new Date())
   const todayTrades = trades.filter(t => t.date === todayStr)
   const todayPnL = todayTrades.reduce((s, t) => s + Number(t.pnl), 0)

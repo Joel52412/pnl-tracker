@@ -7,7 +7,7 @@ import {
   CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement,
 } from 'chart.js'
 import { Bar, Doughnut } from 'react-chartjs-2'
-import { TrendingUp, TrendingDown, Activity, Award, Minus, Flame, Zap, AlertTriangle } from 'lucide-react'
+import { TrendingUp, TrendingDown, Activity, Award, Flame, Zap, AlertTriangle } from 'lucide-react'
 import { subMonths, format } from 'date-fns'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement)
@@ -213,7 +213,7 @@ export default function Stats() {
           label="Avg Loss"
           value={`-${formatCurrency(s.avgLoss, 0)}`}
           sub="per losing trade"
-          icon={Minus}
+          icon={TrendingDown}
           accent="bg-red-500/10"
         />
         <StatCard
